@@ -11,7 +11,7 @@
    - [Giai Đoạn 1: Tiếp cận & Tìm hiểu thông tin (Chưa đặt lịch)](#giai-đoạn-1-tiếp-cận--tìm-hiểu-thông-tin)
    - [Giai Đoạn 2: Quy trình Đặt lịch khám bệnh 3 bước](#giai-đoạn-2-quy-trình-đặt-lịch-khám-bệnh-3-bước)
    - [Giai Đoạn 3: Tra cứu & Theo dõi hồ sơ bằng Số Điện Thoại](#giai-đoạn-3-tra-cứu--theo-dõi-hồ-sơ-bằng-số-điện-thoại)
-   - [Giai Đoạn 4: Đăng ký & Đăng nhập bằng Số Điện Thoại](#giai-đoạn-4-đăng-ký--đăng-nhập-bằng-số-điện-thoại)
+   - [Giai Đoạn 4: Đăng ký, Đăng nhập & Cơ chế cấp mật khẩu cho Khách vãng lai](#giai-đoạn-4-đăng-ký-đăng-nhập--cơ-chế-cấp-mật-khẩu-cho-khách-vãng-lai)
    - [Giai Đoạn 5: Quản lý thông tin cá nhân & Tải ảnh đại diện](#giai-đoạn-5-quản-lý-thông-tin-cá-nhân--tải-ảnh-đại-diện)
    - [Giai Đoạn 6: Khôi phục mật khẩu qua mã OTP SMS](#giai-đoạn-6-khôi-phục-mật-khẩu-qua-mã-otp-sms)
 5. [Sơ Đồ Luồng Dữ Liệu (Data Flow & Sequence Diagrams)](#5-sơ-đồ-luồng-dữ-liệu)
@@ -159,16 +159,40 @@ Hệ thống hỗ trợ 2 cơ chế theo dõi linh hoạt:
 
 ---
 
-### Giai Đoạn 4: Đăng Ký & Đăng Nhập Bằng Số Điện Thoại
+### Giai Đoạn 4: Đăng Ký, Đăng Nhập & Cơ Chế Cấp Mật Khẩu Cho Khách Vãng Lai
 
-#### Đăng Ký Tài Khoản (`/register`):
+#### 1. Khách Vãng Lai Tra Cứu Lại Hồ Sơ KHÔNG CẦN MẬT KHẨU:
+- **Tự động ghi nhớ trên cùng thiết bị:** Khi khách vãng lai đặt lịch thành công, SĐT được lưu trong `localStorage` (`careplus_patient_phone`). Khi quay lại trang `/dashboard` trên cùng trình duyệt, hệ thống tự động tải toàn bộ lịch sử ca khám mà không yêu cầu đăng nhập.
+- **Truy cập từ thiết bị khác (Điện thoại mới, máy tính khác):** Bệnh nhân chỉ cần mở trang **"Theo Dõi Hồ Sơ"** (`/dashboard`), nhập **Số Điện Thoại** đã đặt lịch vào thanh tra cứu trên đầu trang -> Bấm *"Tra Cứu"* là xem được đầy đủ hồ sơ bệnh án, lịch hẹn và đơn thuốc điện tử ngay lập tức mà không cần nhớ mật khẩu.
+
+#### 2. Làm Thế Nào Để Khách Vãng Lai Có MẬT KHẨU Để Đăng Nhập Chính Thức?
+Khi khách vãng lai muốn đăng nhập chính thức (để đổi Avatar, quản lý thông tin cá nhân, cập nhật mật khẩu riêng), họ có thể lấy/tạo mật khẩu theo các cách sau:
+
+* **🔹 Cách 1: Tự tạo mật khẩu mới bằng mã OTP SMS (Khuyên dùng - Trải nghiệm chuẩn nhất):**
+  1. Khách vào trang **Đăng Nhập** (`/login`) -> Bấm vào dòng chữ **"Quên mật khẩu?"**.
+  2. Nhập **Số Điện Thoại** đã dùng khi đặt lịch khám -> Bấm *"Gửi Mã Xác Thực OTP"*.
+  3. Hệ thống tạo mã OTP 6 chữ số gửi về điện thoại của bệnh nhân.
+  4. Bệnh nhân nhập mã OTP nhận được + **Mật khẩu mới tự chọn** (tối thiểu 6 ký tự) -> Bấm *"Xác Nhận Đổi Mật Khẩu"*.
+  5. Sau bước này, tài khoản của bệnh nhân đã có mật khẩu riêng an toàn và có thể đăng nhập bình thường.
+
+* **🔹 Cách 2: Sử dụng mật khẩu khởi tạo mặc định của hệ thống:**
+  - Khi khách vãng lai đặt lịch lần đầu, backend (`POST /api/appointments`) tự động khởi tạo tài khoản bệnh nhân (`role: PATIENT`) gắn với SĐT và cấp mật khẩu mã hóa mặc định:
+    ```text
+    password123
+    ```
+  - Bệnh nhân có thể dùng **SĐT của mình** + mật khẩu **`password123`** để đăng nhập ngay tại `/login`. Sau khi đăng nhập, bệnh nhân vào Tab **"Quản Lý Cá Nhân"** trên Dashboard để đổi sang mật khẩu riêng.
+
+* **🔹 Cách 3: Khi khách bấm vào trang Đăng Ký (`/register`):**
+  - Nếu khách nhập lại SĐT đã từng đặt lịch để đăng ký tài khoản mới, hệ thống sẽ phát hiện SĐT đã tồn tại và thông báo hướng dẫn chuyển sang Đăng Nhập hoặc Đặt lại mật khẩu bằng mã OTP.
+
+#### 3. Đăng Ký Tài Khoản Mới (`/register`):
 - Biểu mẫu cực kỳ tối giản, **loại bỏ trường Email**:
   1. Họ và tên bệnh nhân
   2. Số Điện Thoại (10 số)
   3. Mật khẩu & Xác nhận mật khẩu
 - Sau khi bấm *"Đăng Ký Bằng Số Điện Thoại"*, hệ thống mã hóa mật khẩu qua Bcrypt, khởi tạo tài khoản và tự động cấp Session Cookie để bệnh nhân vào thẳng Dashboard.
 
-#### Đăng Nhập Tài Khoản (`/login`):
+#### 4. Đăng Nhập Tài Khoản (`/login`):
 - Bệnh nhân chỉ cần nhập **Số Điện Thoại** và **Mật khẩu**.
 - Hỗ trợ nút đăng nhập nhanh trải nghiệm Demo cho Bệnh nhân (`0901234567`), Bác sĩ (`0912345601`) và Quản lý (`0909000001`).
 

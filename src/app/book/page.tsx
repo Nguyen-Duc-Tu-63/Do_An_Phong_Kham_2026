@@ -66,6 +66,10 @@ function BookingFormContent() {
   const selectedBookingType = form.watch('bookingType');
   const selectedDate = form.watch('appointmentDate');
   const selectedTime = form.watch('appointmentTime');
+  const watchedFullName = form.watch('fullName');
+  const watchedPhone = form.watch('phone');
+  const watchedEmail = form.watch('email');
+  const watchedPatientNotes = form.watch('patientNotes');
 
   useEffect(() => {
     async function initData() {
@@ -162,6 +166,10 @@ function BookingFormContent() {
   };
 
   const onSubmit = async (values: BookingFormValues) => {
+    if (step !== 3) {
+      handleNextStep();
+      return;
+    }
     setIsSubmitting(true);
     try {
       const res = await fetch('/api/appointments', {
@@ -185,6 +193,28 @@ function BookingFormContent() {
       toast.error('Lỗi kết nối máy chủ');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (step < 3) {
+      handleNextStep();
+      return;
+    }
+    form.handleSubmit(onSubmit)(e);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      const target = e.target as HTMLElement;
+      if (target.tagName.toLowerCase() === 'textarea') {
+        return;
+      }
+      e.preventDefault();
+      if (step < 3) {
+        handleNextStep();
+      }
     }
   };
 
@@ -236,7 +266,7 @@ function BookingFormContent() {
 
       {/* FORM CARD */}
       <Card className="p-6 md:p-8 shadow-card">
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleFormSubmit} onKeyDown={handleKeyDown} className="space-y-6">
           {/* BƯỚC 1: CHỌN KHOA & BÁC SĨ */}
           {step === 1 && (
             <div className="space-y-6">
@@ -469,9 +499,24 @@ function BookingFormContent() {
               <div>
                 <h3 className="text-lg font-bold text-slate-800">Bước 3: Điền Thông Tin & Xác Nhận</h3>
                 <p className="text-xs text-slate-500 mt-1">
-                  Số điện thoại là mã định danh chính để bạn theo dõi hồ sơ khám bệnh trực tuyến.
+                  Kiểm tra thông tin cá nhân và khai báo triệu chứng / lý do khám trước khi hoàn tất đặt lịch.
                 </p>
               </div>
+
+              {/* LOGGED IN USER ALERT IF ANY */}
+              {currentUser && (
+                <div className="p-3.5 bg-sky-50 border border-sky-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-sky-900 shadow-xs">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-sky-600 shrink-0" />
+                    <span>
+                      Đang sử dụng thông tin tài khoản: <strong>{currentUser.fullName}</strong> ({currentUser.phone})
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-sky-700 bg-sky-100 px-2.5 py-1 rounded-lg font-medium self-start sm:self-auto">
+                    💡 Bạn có thể chỉnh sửa nếu đặt lịch khám cho người thân
+                  </span>
+                </div>
+              )}
 
               {/* PHONE HIGHLIGHT BANNER */}
               <div className="p-4 bg-emerald-50/90 border-2 border-emerald-300 rounded-2xl flex items-start gap-3 shadow-xs">
@@ -516,34 +561,66 @@ function BookingFormContent() {
                 icon={<Mail className="w-4 h-4" />}
               />
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Mô Tả Triệu Chứng / Lý Do Khám (Không bắt buộc)
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                  Mô Tả Triệu Chứng / Lý Do Khám (Tùy chọn)
                 </label>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  <span className="text-[11px] text-slate-500 font-medium self-center mr-1">Gợi ý nhanh:</span>
+                  {['Sốt nhẹ, mệt mỏi', 'Đau đầu, chóng mặt', 'Ho dai dẳng', 'Đau bụng âm ỉ', 'Khám sức khỏe tổng quát', 'Tái khám định kỳ'].map((chip) => (
+                    <button
+                      key={chip}
+                      type="button"
+                      onClick={() => {
+                        const current = form.getValues('patientNotes') || '';
+                        const updated = current ? `${current}, ${chip}` : chip;
+                        form.setValue('patientNotes', updated);
+                      }}
+                      className="px-2.5 py-1 bg-slate-100 hover:bg-emerald-50 hover:text-[#0d9488] hover:border-emerald-300 border border-slate-200 text-slate-600 text-[11px] rounded-lg transition-all"
+                    >
+                      + {chip}
+                    </button>
+                  ))}
+                </div>
                 <textarea
                   rows={3}
                   className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#4fc3a1]"
-                  placeholder="Ví dụ: Đau đầu kéo dài 2 ngày, sốt nhẹ..."
+                  placeholder="Ví dụ: Đau đầu kéo dài 2 ngày, sốt nhẹ, người mệt mỏi..."
                   {...form.register('patientNotes')}
                 />
               </div>
 
               {/* Tóm tắt phiếu đặt */}
               <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3 text-xs">
-                <h4 className="font-bold text-slate-800 text-sm border-b pb-2">Tóm Tắt Thông Tin Đặt Lịch:</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-600">
-                  <p><strong>Chuyên Khoa:</strong> {selectedSpecialtyObj?.name}</p>
+                <h4 className="font-bold text-slate-800 text-sm border-b pb-2 flex items-center justify-between">
+                  <span>Tóm Tắt Thông Tin Phiếu Đặt Lịch:</span>
+                  <Badge variant="emerald" className="text-[10px]">Sẵn sàng đặt</Badge>
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-600">
+                  <p><strong>Chuyên Khoa:</strong> <span className="text-slate-800 font-semibold">{selectedSpecialtyObj?.name || 'Chưa chọn'}</span></p>
                   <p>
                     <strong>Bác Sĩ:</strong>{' '}
-                    {selectedBookingType === 'AUTO_ASSIGN' || !selectedDoctorObj
-                      ? 'Hệ thống tự xếp bác sĩ'
-                      : selectedDoctorObj.user.fullName}
+                    <span className="text-slate-800 font-semibold">
+                      {selectedBookingType === 'AUTO_ASSIGN' || !selectedDoctorObj
+                        ? 'Hệ thống tự xếp bác sĩ'
+                        : selectedDoctorObj.user.fullName}
+                    </span>
                   </p>
                   <p className="text-emerald-700 font-bold">
-                    <strong>Thời Gian:</strong> {formatDate(selectedDate)} lúc {selectedTime}
+                    <strong>Thời Gian Khám:</strong> {formatDate(selectedDate)} lúc {selectedTime || 'Chưa chọn giờ'}
                   </p>
-                  <p><strong>Bệnh Nhân:</strong> {form.getValues('fullName')} ({form.getValues('phone')})</p>
+                  <p>
+                    <strong>Bệnh Nhân:</strong>{' '}
+                    <span className="text-slate-800 font-semibold">
+                      {watchedFullName || 'Chưa nhập tên'} ({watchedPhone || 'Chưa có SĐT'})
+                    </span>
+                  </p>
                 </div>
+                {watchedPatientNotes && (
+                  <div className="pt-2 border-t border-slate-200 text-slate-700">
+                    <strong>Triệu chứng:</strong> <span className="italic">"{watchedPatientNotes}"</span>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -551,7 +628,7 @@ function BookingFormContent() {
           {/* NÚT CHUYỂN BƯỚC */}
           <div className="flex items-center justify-between pt-6 border-t border-slate-100">
             {step > 1 ? (
-              <Button type="button" variant="outline" onClick={handlePrevStep}>
+              <Button key="prev-step-btn" type="button" variant="outline" onClick={handlePrevStep}>
                 <ChevronLeft className="w-4 h-4 mr-1" /> Quay Lại
               </Button>
             ) : (
@@ -559,12 +636,18 @@ function BookingFormContent() {
             )}
 
             {step < 3 ? (
-              <Button type="button" onClick={handleNextStep}>
+              <Button key="next-step-btn" type="button" onClick={handleNextStep}>
                 Tiếp Theo <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             ) : (
-              <Button type="submit" isLoading={isSubmitting} size="lg" className="px-8 shadow-lg">
-                Xác Nhận Đặt Lịch Khám
+              <Button
+                key="submit-booking-btn"
+                type="submit"
+                isLoading={isSubmitting}
+                size="lg"
+                className="px-8 shadow-lg bg-[#10b981] hover:bg-emerald-600 font-bold"
+              >
+                <CheckCircle2 className="w-4 h-4 mr-1.5" /> Xác Nhận Đặt Lịch Khám
               </Button>
             )}
           </div>
