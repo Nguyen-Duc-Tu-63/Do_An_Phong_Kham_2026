@@ -1,0 +1,121 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  fullName     String
+  email        String   @unique
+  phone        String
+  passwordHash String
+  role         String   @default("PATIENT") // "ADMIN", "DOCTOR", "PATIENT"
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+
+  doctorInfo     DoctorInfo?
+  appointments   Appointment[]   @relation("PatientAppointments")
+  medicalRecords MedicalRecord[] @relation("PatientMedicalRecords")
+  notifications  Notification[]
+}
+
+model Specialty {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  iconUrl     String?
+
+  doctors      DoctorInfo[]
+  appointments Appointment[]
+}
+
+model DoctorInfo {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  specialtyId     String
+  degree          String
+  experienceYears Int
+  bio             String
+  consultationFee Float
+
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialty      Specialty        @relation(fields: [specialtyId], references: [id], onDelete: Cascade)
+  schedules      DoctorSchedule[]
+  appointments   Appointment[]    @relation("DoctorAppointments")
+  medicalRecords MedicalRecord[]  @relation("DoctorMedicalRecords")
+}
+
+model DoctorSchedule {
+  id                  String @id @default(uuid())
+  doctorId            String
+  dayOfWeek           Int // 0 (Sun) - 6 (Sat)
+  startTime           String // "08:00"
+  endTime             String // "17:00"
+  slotDurationMinutes Int    @default(30)
+
+  doctor DoctorInfo @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+}
+
+model Appointment {
+  id              String   @id @default(uuid())
+  patientId       String
+  doctorId        String?
+  specialtyId     String
+  appointmentDate String // "YYYY-MM-DD"
+  appointmentTime String // "HH:mm"
+  status          String   @default("PENDING") // "PENDING", "CONFIRMED", "COMPLETED", "CANCELLED", "NEEDS_REASSIGNMENT"
+  bookingType     String   @default("SELF_SELECTED") // "SELF_SELECTED", "AUTO_ASSIGN"
+  patientNotes    String?
+  createdAt       DateTime @default(now())
+
+  patient       User           @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
+  doctor        DoctorInfo?    @relation("DoctorAppointments", fields: [doctorId], references: [id], onDelete: SetNull)
+  specialty     Specialty      @relation(fields: [specialtyId], references: [id], onDelete: Cascade)
+  medicalRecord MedicalRecord?
+  notifications Notification[]
+}
+
+model MedicalRecord {
+  id            String   @id @default(uuid())
+  appointmentId String   @unique
+  patientId     String
+  doctorId      String
+  symptoms      String
+  diagnosis     String
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  appointment   Appointment    @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  patient       User           @relation("PatientMedicalRecords", fields: [patientId], references: [id], onDelete: Cascade)
+  doctor        DoctorInfo     @relation("DoctorMedicalRecords", fields: [doctorId], references: [id], onDelete: Cascade)
+  prescriptions Prescription[]
+}
+
+model Prescription {
+  id              String  @id @default(uuid())
+  medicalRecordId String
+  medicineName    String
+  dosage          String
+  frequency       String
+  duration        String
+  notes           String?
+
+  medicalRecord MedicalRecord @relation(fields: [medicalRecordId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id            String   @id @default(uuid())
+  userId        String
+  appointmentId String?
+  message       String
+  type          String   @default("GENERAL") // "URGENT_DOCTOR_BUSY", "NEW_BOOKING", "GENERAL"
+  isRead        Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointment Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+}
