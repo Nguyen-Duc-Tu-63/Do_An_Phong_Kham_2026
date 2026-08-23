@@ -20,6 +20,10 @@ import {
   Clock,
   Layers,
   Phone,
+  Headphones,
+  Eye,
+  Smile,
+  Activity,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
@@ -57,6 +61,15 @@ export default function HomePage() {
         return <Baby className="w-8 h-8 text-[#4fc3a1]" />;
       case 'Sparkles':
         return <Sparkles className="w-8 h-8 text-[#4fc3a1]" />;
+      case 'Headphones':
+        return <Headphones className="w-8 h-8 text-[#4fc3a1]" />;
+      case 'Eye':
+        return <Eye className="w-8 h-8 text-[#4fc3a1]" />;
+      case 'Smile':
+        return <Smile className="w-8 h-8 text-[#4fc3a1]" />;
+      case 'Bone':
+      case 'Activity':
+        return <Activity className="w-8 h-8 text-[#4fc3a1]" />;
       default:
         return <Stethoscope className="w-8 h-8 text-[#4fc3a1]" />;
     }

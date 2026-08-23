@@ -24,9 +24,25 @@ import {
   Phone,
   Mail,
   FileText,
+  Sun,
+  Moon,
+  Check,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import {
+  formatCurrency,
+  formatDate,
+  ALL_STANDARD_SLOTS,
+  STANDARD_MORNING_SLOTS,
+  STANDARD_AFTERNOON_SLOTS,
+} from '@/lib/utils';
+
+interface SlotItem {
+  time: string;
+  available: boolean;
+  period: 'MORNING' | 'AFTERNOON';
+  reason?: string;
+}
 
 function BookingFormContent() {
   const router = useRouter();
@@ -39,6 +55,7 @@ function BookingFormContent() {
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
   const [doctors, setDoctors] = useState<DoctorInfo[]>([]);
   const [filteredDoctors, setFilteredDoctors] = useState<DoctorInfo[]>([]);
+  const [allSlots, setAllSlots] = useState<SlotItem[]>([]);
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -114,6 +131,7 @@ function BookingFormContent() {
 
   useEffect(() => {
     if (!selectedSpecialtyId || !selectedDate) {
+      setAllSlots([]);
       setAvailableSlots([]);
       return;
     }
@@ -129,9 +147,26 @@ function BookingFormContent() {
           `/api/appointments/available-slots?date=${selectedDate}&specialtyId=${selectedSpecialtyId}&doctorId=${docParam}`
         );
         const data = await res.json();
-        setAvailableSlots(data.availableSlots || []);
-        if (selectedTime && !data.availableSlots?.includes(selectedTime)) {
-          form.setValue('appointmentTime', '');
+
+        if (data.allSlots && Array.isArray(data.allSlots)) {
+          setAllSlots(data.allSlots);
+          const avList: string[] = data.availableSlots || [];
+          setAvailableSlots(avList);
+          if (selectedTime && !avList.includes(selectedTime)) {
+            form.setValue('appointmentTime', '');
+          }
+        } else {
+          const avSlots: string[] = data.availableSlots || [];
+          const fullSlots: SlotItem[] = ALL_STANDARD_SLOTS.map((time) => ({
+            time,
+            available: avSlots.includes(time),
+            period: STANDARD_MORNING_SLOTS.includes(time) ? 'MORNING' : 'AFTERNOON',
+          }));
+          setAllSlots(fullSlots);
+          setAvailableSlots(avSlots);
+          if (selectedTime && !avSlots.includes(selectedTime)) {
+            form.setValue('appointmentTime', '');
+          }
         }
       } catch (e) {
         console.error(e);
@@ -428,64 +463,232 @@ function BookingFormContent() {
             </div>
           )}
 
-          {/* BƯỚC 2: CHỌN NGÀY & GIỜ KHÁM */}
+          {/* BƯỚC 2: CHỌN NGÀY & TẤT CẢ CÁC SUẤT KHÁM */}
           {step === 2 && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-bold text-slate-800">Bước 2: Chọn Ngày & Giờ Khám</h3>
+                <h3 className="text-lg font-bold text-slate-800">Bước 2: Chọn Ngày & Suất Khám Bệnh</h3>
                 <p className="text-xs text-slate-500 mt-1">
-                  Chọn ngày khám để xem các khung giờ còn nhận lịch hẹn.
+                  Chọn ngày khám và khung giờ phù hợp. Toàn bộ các suất khám sáng và chiều đều được hiển thị đầy đủ.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Cột chọn ngày */}
-                <div className="space-y-3">
-                  <Input
-                    label="Ngày Khám Bệnh *"
-                    type="date"
-                    min={todayStr}
-                    {...form.register('appointmentDate')}
-                    error={form.formState.errors.appointmentDate?.message}
-                    icon={<CalendarIcon className="w-4 h-4" />}
-                  />
-                  <div className="p-3 bg-slate-50 rounded-xl text-[11px] text-slate-500">
-                    💡 Khung giờ làm việc: 08:00 - 17:00 (Thứ 2 - Thứ 6) và 08:00 - 12:00 (Thứ 7).
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* Cột chọn ngày (5 cols) */}
+                <div className="lg:col-span-5 space-y-4">
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                      Ngày Khám Bệnh *
+                    </label>
+                    <Input
+                      type="date"
+                      min={todayStr}
+                      {...form.register('appointmentDate')}
+                      error={form.formState.errors.appointmentDate?.message}
+                      icon={<CalendarIcon className="w-4 h-4" />}
+                    />
                   </div>
-                </div>
 
-                {/* Cột chọn khung giờ */}
-                <div className="space-y-3">
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                    Khung Giờ Còn Trống *
-                  </label>
-
-                  {loadingSlots ? (
-                    <div className="py-8 text-center text-xs text-slate-400">Đang tìm giờ trống...</div>
-                  ) : availableSlots.length === 0 ? (
-                    <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 text-amber-800 text-xs">
-                      Ngày này hiện đã hết suất khám. Vui lòng chọn ngày khám khác.
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-3 gap-2.5 max-h-56 overflow-y-auto pr-1">
-                      {availableSlots.map((slot) => {
-                        const isSelected = selectedTime === slot;
+                  {/* Quick Date Chips */}
+                  <div className="space-y-1.5">
+                    <span className="text-[11px] font-semibold text-slate-500">Chọn nhanh ngày khám:</span>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[0, 1, 2].map((offset) => {
+                        const d = new Date(Date.now() + offset * 86400000);
+                        const dStr = d.toISOString().split('T')[0];
+                        const label = offset === 0 ? 'Hôm Nay' : offset === 1 ? 'Ngày Mai' : `+2 Ngày`;
+                        const isSelected = selectedDate === dStr;
                         return (
                           <button
-                            key={slot}
+                            key={offset}
                             type="button"
-                            onClick={() => form.setValue('appointmentTime', slot)}
-                            className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                            onClick={() => form.setValue('appointmentDate', dStr)}
+                            className={`px-2.5 py-2 rounded-xl text-xs font-bold transition-all border text-center ${
                               isSelected
-                                ? 'bg-[#4fc3a1] text-white shadow-sm ring-2 ring-emerald-200'
-                                : 'bg-slate-50 text-slate-700 hover:bg-emerald-50 hover:text-[#4fc3a1] border border-slate-200'
+                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                                : 'bg-white text-slate-700 hover:bg-slate-50 border-slate-200'
                             }`}
                           >
-                            <Clock className="w-3.5 h-3.5" />
-                            {slot}
+                            <div className="text-[11px]">{label}</div>
+                            <div className="text-[10px] font-normal opacity-80">{d.getDate()}/{d.getMonth() + 1}</div>
                           </button>
                         );
                       })}
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-emerald-50/70 rounded-2xl border border-emerald-200 text-xs text-emerald-900 space-y-2">
+                    <p className="font-bold flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-emerald-600" /> Thời gian phục vụ phòng khám:
+                    </p>
+                    <p className="text-[11px] leading-relaxed text-emerald-800">
+                      • <strong>Ca Sáng:</strong> 08:00 – 11:30 (Khám 30 phút/suất)
+                      <br />
+                      • <strong>Ca Chiều:</strong> 13:30 – 17:00 (Khám 30 phút/suất)
+                      <br />
+                      • Phục vụ <strong>tất cả các ngày trong tuần</strong> (Thứ 2 – Chủ Nhật).
+                    </p>
+                  </div>
+                </div>
+
+                {/* Cột chọn suất khám (7 cols) */}
+                <div className="lg:col-span-7 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                      Tất Cả Các Suất Khám ({allSlots.length} Khung Giờ) *
+                    </label>
+                    {selectedDate && (
+                      <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200">
+                        {formatDate(selectedDate)}
+                      </span>
+                    )}
+                  </div>
+
+                  {loadingSlots ? (
+                    <div className="py-12 text-center text-xs text-slate-400 space-y-2">
+                      <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                      <p>Đang tải danh sách các suất khám...</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {/* 1. CA SÁNG */}
+                      <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-2.5">
+                        <div className="flex items-center justify-between text-xs font-bold text-slate-800 border-b border-slate-200/80 pb-2">
+                          <span className="flex items-center gap-1.5 text-amber-700 font-extrabold">
+                            <Sun className="w-4 h-4 text-amber-500" /> 🌅 Ca Sáng (08:00 – 11:30)
+                          </span>
+                          <span className="text-[11px] font-semibold text-slate-500">
+                            {allSlots.filter((s) => s.period === 'MORNING' && s.available).length}/8 suất trống
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          {allSlots
+                            .filter((s) => s.period === 'MORNING')
+                            .map((slot) => {
+                              const isSelected = selectedTime === slot.time;
+                              return (
+                                <button
+                                  key={slot.time}
+                                  type="button"
+                                  disabled={!slot.available}
+                                  onClick={() => form.setValue('appointmentTime', slot.time)}
+                                  className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center gap-0.5 border ${
+                                    isSelected
+                                      ? 'bg-[#10b981] text-white border-[#10b981] shadow-md ring-2 ring-emerald-300 scale-[1.02]'
+                                      : slot.available
+                                      ? 'bg-white text-slate-800 hover:border-emerald-400 hover:text-emerald-700 hover:bg-emerald-50/50 border-slate-200 shadow-xs'
+                                      : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60 line-through'
+                                  }`}
+                                  title={slot.available ? `Suất khám lúc ${slot.time}` : slot.reason || 'Đã kín lịch'}
+                                >
+                                  <span className="flex items-center gap-1">
+                                    {isSelected ? (
+                                      <Check className="w-3 h-3 text-white" />
+                                    ) : (
+                                      <Clock className="w-3 h-3 text-slate-400" />
+                                    )}
+                                    {slot.time}
+                                  </span>
+                                  <span
+                                    className={`text-[10px] font-normal ${
+                                      isSelected
+                                        ? 'text-emerald-100 font-semibold'
+                                        : slot.available
+                                        ? 'text-emerald-600'
+                                        : 'text-slate-400'
+                                    }`}
+                                  >
+                                    {isSelected ? 'Đang chọn' : slot.available ? 'Còn chỗ' : 'Đã kín'}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                        </div>
+                      </div>
+
+                      {/* 2. CA CHIỀU */}
+                      <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-2.5">
+                        <div className="flex items-center justify-between text-xs font-bold text-slate-800 border-b border-slate-200/80 pb-2">
+                          <span className="flex items-center gap-1.5 text-teal-800 font-extrabold">
+                            <Moon className="w-4 h-4 text-teal-600" /> 🌇 Ca Chiều (13:30 – 17:00)
+                          </span>
+                          <span className="text-[11px] font-semibold text-slate-500">
+                            {allSlots.filter((s) => s.period === 'AFTERNOON' && s.available).length}/8 suất trống
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          {allSlots
+                            .filter((s) => s.period === 'AFTERNOON')
+                            .map((slot) => {
+                              const isSelected = selectedTime === slot.time;
+                              return (
+                                <button
+                                  key={slot.time}
+                                  type="button"
+                                  disabled={!slot.available}
+                                  onClick={() => form.setValue('appointmentTime', slot.time)}
+                                  className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center gap-0.5 border ${
+                                    isSelected
+                                      ? 'bg-[#10b981] text-white border-[#10b981] shadow-md ring-2 ring-emerald-300 scale-[1.02]'
+                                      : slot.available
+                                      ? 'bg-white text-slate-800 hover:border-emerald-400 hover:text-emerald-700 hover:bg-emerald-50/50 border-slate-200 shadow-xs'
+                                      : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60 line-through'
+                                  }`}
+                                  title={slot.available ? `Suất khám lúc ${slot.time}` : slot.reason || 'Đã kín lịch'}
+                                >
+                                  <span className="flex items-center gap-1">
+                                    {isSelected ? (
+                                      <Check className="w-3 h-3 text-white" />
+                                    ) : (
+                                      <Clock className="w-3 h-3 text-slate-400" />
+                                    )}
+                                    {slot.time}
+                                  </span>
+                                  <span
+                                    className={`text-[10px] font-normal ${
+                                      isSelected
+                                        ? 'text-emerald-100 font-semibold'
+                                        : slot.available
+                                        ? 'text-emerald-600'
+                                        : 'text-slate-400'
+                                    }`}
+                                  >
+                                    {isSelected ? 'Đang chọn' : slot.available ? 'Còn chỗ' : 'Đã kín'}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                        </div>
+                      </div>
+
+                      {/* Chú thích Legend */}
+                      <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-500 px-1 pt-1 gap-2">
+                        <div className="flex items-center gap-3">
+                          <span className="flex items-center gap-1">
+                            <span className="w-3 h-3 rounded-md bg-[#10b981]" /> Đang chọn
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <span className="w-3 h-3 rounded-md bg-white border border-slate-300" /> Còn trống
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <span className="w-3 h-3 rounded-md bg-slate-200 border border-slate-300" /> Đã kín lịch
+                          </span>
+                        </div>
+
+                        {selectedTime && (
+                          <span className="text-emerald-700 font-bold">
+                            ✓ Đã chọn: {selectedTime}
+                          </span>
+                        )}
+                      </div>
+
+                      {form.formState.errors.appointmentTime && (
+                        <p className="text-xs text-rose-500 font-medium">
+                          {form.formState.errors.appointmentTime.message}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>

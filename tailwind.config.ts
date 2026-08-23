@@ -33,7 +33,7 @@ const config: Config = {
         }
       },
       fontFamily: {
-        sans: ['Inter', 'Be Vietnam Pro', 'sans-serif'],
+        sans: ['var(--font-inter)', 'var(--font-be-vietnam-pro)', 'Inter', 'Be Vietnam Pro', 'sans-serif'],
       },
       borderRadius: {
         xl: '0.75rem',

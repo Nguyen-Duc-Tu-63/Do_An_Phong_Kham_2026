@@ -58,6 +58,20 @@ export async function POST(request: Request) {
     const body = await request.json();
     const currentUser = await getCurrentUser();
 
+    const targetApptId = body.appointmentId || body.id;
+    if (targetApptId && body.status) {
+      const updatedAppt = await prisma.appointment.update({
+        where: { id: targetApptId },
+        data: { status: body.status },
+        include: {
+          specialty: true,
+          patient: { select: { fullName: true } },
+          doctor: { include: { user: true } },
+        },
+      });
+      return NextResponse.json(updatedAppt);
+    }
+
     let targetPatientId = body.patientId || currentUser?.id;
 
     if (!targetPatientId) {
@@ -122,6 +136,88 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(newAppt, { status: 201 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const targetId = body.appointmentId || body.id;
+
+    if (!targetId) {
+      return NextResponse.json({ error: 'Thiếu mã lịch hẹn (appointmentId)' }, { status: 400 });
+    }
+
+    const existingAppt = await prisma.appointment.findUnique({
+      where: { id: targetId },
+      include: {
+        patient: true,
+        doctor: { include: { user: true } },
+        specialty: true,
+      },
+    });
+
+    if (!existingAppt) {
+      return NextResponse.json({ error: 'Không tìm thấy lịch hẹn' }, { status: 404 });
+    }
+
+    const updateData: any = {};
+    if (body.status !== undefined) updateData.status = body.status;
+    if (body.patientNotes !== undefined) updateData.patientNotes = body.patientNotes;
+    if (body.appointmentDate !== undefined) updateData.appointmentDate = body.appointmentDate;
+    if (body.appointmentTime !== undefined) updateData.appointmentTime = body.appointmentTime;
+
+    const updatedAppt = await prisma.appointment.update({
+      where: { id: targetId },
+      data: updateData,
+      include: {
+        patient: {
+          select: { id: true, fullName: true, email: true, phone: true, avatarUrl: true },
+        },
+        doctor: {
+          include: {
+            user: { select: { fullName: true, email: true, phone: true, avatarUrl: true } },
+            specialty: true,
+          },
+        },
+        specialty: true,
+        medicalRecord: {
+          include: {
+            prescriptions: true,
+          },
+        },
+      },
+    });
+
+    // If cancelled, send notification to admin and assigned doctor
+    if (body.status === 'CANCELLED') {
+      const adminUser = await prisma.user.findFirst({ where: { role: 'ADMIN' } });
+      if (adminUser) {
+        await prisma.notification.create({
+          data: {
+            userId: adminUser.id,
+            appointmentId: updatedAppt.id,
+            message: `Lịch hẹn của bệnh nhân ${existingAppt.patient.fullName} (${existingAppt.specialty?.name || ''}) ngày ${existingAppt.appointmentDate} lúc ${existingAppt.appointmentTime} đã bị hủy.`,
+            type: 'CANCELLED',
+          },
+        });
+      }
+
+      if (existingAppt.doctor?.userId) {
+        await prisma.notification.create({
+          data: {
+            userId: existingAppt.doctor.userId,
+            appointmentId: updatedAppt.id,
+            message: `Bệnh nhân ${existingAppt.patient.fullName} đã hủy lịch hẹn ngày ${existingAppt.appointmentDate} lúc ${existingAppt.appointmentTime}.`,
+            type: 'CANCELLED',
+          },
+        });
+      }
+    }
+
+    return NextResponse.json(updatedAppt);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

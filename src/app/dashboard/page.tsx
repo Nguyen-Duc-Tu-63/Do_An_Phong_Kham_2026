@@ -220,11 +220,16 @@ function PatientDashboardContent() {
   const handleCancelAppointment = async (apptId: string) => {
     if (!confirm('Bạn có chắc chắn muốn hủy lịch hẹn khám này?')) return;
     try {
-      await fetch(`/api/appointments`, {
-        method: 'POST',
+      const res = await fetch(`/api/appointments`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ appointmentId: apptId, status: 'CANCELLED' }),
       });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || 'Lỗi khi hủy lịch hẹn');
+        return;
+      }
       toast.success('Đã hủy lịch hẹn thành công');
       if (user) {
         const apptRes = await fetch(`/api/appointments?patientId=${user.id}`);
@@ -234,6 +239,10 @@ function PatientDashboardContent() {
         setRecords(apptsArr.filter((a) => a.medicalRecord).map((a) => a.medicalRecord!));
       } else if (activePhone) {
         await fetchAppointmentsByPhone(activePhone);
+      } else {
+        setAppointments((prev) =>
+          prev.map((a) => (a.id === apptId ? { ...a, status: 'CANCELLED' } : a))
+        );
       }
     } catch (e) {
       toast.error('Lỗi khi hủy lịch hẹn');

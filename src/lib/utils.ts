@@ -25,6 +25,33 @@ export function formatDate(dateString: string): string {
   }).format(date);
 }
 
+export const STANDARD_MORNING_SLOTS = [
+  '08:00',
+  '08:30',
+  '09:00',
+  '09:30',
+  '10:00',
+  '10:30',
+  '11:00',
+  '11:30',
+];
+
+export const STANDARD_AFTERNOON_SLOTS = [
+  '13:30',
+  '14:00',
+  '14:30',
+  '15:00',
+  '15:30',
+  '16:00',
+  '16:30',
+  '17:00',
+];
+
+export const ALL_STANDARD_SLOTS = [
+  ...STANDARD_MORNING_SLOTS,
+  ...STANDARD_AFTERNOON_SLOTS,
+];
+
 export function generateTimeSlots(
   startTime: string = '08:00',
   endTime: string = '17:00',

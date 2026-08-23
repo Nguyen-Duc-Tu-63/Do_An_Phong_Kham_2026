@@ -36,8 +36,8 @@ interface MedicineRow {
 export default function DoctorPortalPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<string>('queue');
+  const [queueFilter, setQueueFilter] = useState<'ALL' | 'TODAY' | 'UPCOMING'>('ALL');
   const [user, setUser] = useState<UserSession | null>(null);
-  const [todayAppts, setTodayAppts] = useState<Appointment[]>([]);
   const [allAppts, setAllAppts] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -75,9 +75,6 @@ export default function DoctorPortalPage() {
         const apptData = await apptRes.json();
         const arr: Appointment[] = Array.isArray(apptData) ? apptData : [];
         setAllAppts(arr);
-
-        const todayItems = arr.filter((a) => a.appointmentDate === todayStr);
-        setTodayAppts(todayItems);
       }
     } catch (e) {
       console.error(e);
@@ -89,6 +86,39 @@ export default function DoctorPortalPage() {
   useEffect(() => {
     loadDoctorData();
   }, []);
+
+  // Filter groups
+  const waitingAppts = allAppts
+    .filter(
+      (a) =>
+        a.status === 'PENDING' ||
+        a.status === 'CONFIRMED' ||
+        a.status === 'NEEDS_REASSIGNMENT'
+    )
+    .sort((a, b) => {
+      const dateCmp = a.appointmentDate.localeCompare(b.appointmentDate);
+      if (dateCmp !== 0) return dateCmp;
+      return a.appointmentTime.localeCompare(b.appointmentTime);
+    });
+
+  const todayWaitingAppts = waitingAppts.filter((a) => a.appointmentDate === todayStr);
+  const futureWaitingAppts = waitingAppts.filter((a) => a.appointmentDate > todayStr);
+
+  const todayTotalAppts = allAppts.filter(
+    (a) => a.appointmentDate === todayStr && a.status !== 'CANCELLED'
+  );
+  const todayCompletedCount = todayTotalAppts.filter((a) => a.status === 'COMPLETED').length;
+  const todayWaitingCount = todayWaitingAppts.length;
+
+  const completedAppts = allAppts.filter((a) => a.status === 'COMPLETED');
+  const cancelledAppts = allAppts.filter((a) => a.status === 'CANCELLED');
+
+  // Filtered queue based on sub-filter
+  const filteredWaitingAppts = waitingAppts.filter((a) => {
+    if (queueFilter === 'TODAY') return a.appointmentDate === todayStr;
+    if (queueFilter === 'UPCOMING') return a.appointmentDate > todayStr;
+    return true;
+  });
 
   const handleOpenConsultation = (appt: Appointment) => {
     setConsultAppt(appt);
@@ -184,11 +214,6 @@ export default function DoctorPortalPage() {
     }
   };
 
-  const completedTodayCount = todayAppts.filter((a) => a.status === 'COMPLETED').length;
-  const remainingTodayCount = todayAppts.filter(
-    (a) => a.status === 'CONFIRMED' || a.status === 'PENDING'
-  ).length;
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       {/* HEADER BANNER */}
@@ -203,7 +228,7 @@ export default function DoctorPortalPage() {
               <Badge variant="emerald">Giao Diện Bác Sĩ</Badge>
             </div>
             <p className="text-xs text-slate-500 mt-1">
-              Hàng Chờ Khám • {todayAppts.length} Bệnh nhân đặt khám hôm nay ({formatDate(todayStr)})
+              Bàn làm việc Bác sĩ • Hôm nay: {formatDate(todayStr)} ({todayTotalAppts.length} ca khám)
             </p>
           </div>
         </div>
@@ -219,43 +244,71 @@ export default function DoctorPortalPage() {
 
       {/* STATS */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <Card className="flex items-center gap-4 p-5">
+        {/* STAT 1: WAITING APPOINTMENTS */}
+        <Card className="flex items-center gap-4 p-5 border-2 border-emerald-100 hover:border-emerald-300 transition-all shadow-sm">
           <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-[#4fc3a1] flex items-center justify-center font-bold">
-            <Calendar className="w-6 h-6" />
+            <Clock className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs text-slate-500 font-semibold uppercase">Tổng Hôm Nay</p>
-            <p className="text-2xl font-bold text-slate-800">{todayAppts.length} Bệnh nhân</p>
+            <p className="text-xs text-slate-500 font-semibold uppercase">Lịch Hẹn Chờ Khám</p>
+            <p className="text-2xl font-bold text-slate-800">{waitingAppts.length} Bệnh nhân</p>
+            <p className="text-[11px] text-emerald-700 font-medium mt-0.5">
+              Hôm nay: <strong>{todayWaitingCount}</strong> ca • Sắp tới: <strong>{futureWaitingAppts.length}</strong> ca
+            </p>
           </div>
         </Card>
 
-        <Card className="flex items-center gap-4 p-5">
+        {/* STAT 2: TODAY APPOINTMENTS */}
+        <Card className="flex items-center gap-4 p-5 border-2 border-teal-100 hover:border-teal-300 transition-all shadow-sm">
+          <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center font-bold">
+            <Calendar className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="text-xs text-slate-500 font-semibold uppercase">Lịch Khám Hôm Nay</p>
+            <p className="text-2xl font-bold text-slate-800">{todayTotalAppts.length} Bệnh nhân</p>
+            <p className="text-[11px] text-teal-700 font-medium mt-0.5">
+              Chờ khám: <strong>{todayWaitingCount}</strong> • Đã khám: <strong>{todayCompletedCount}</strong>
+            </p>
+          </div>
+        </Card>
+
+        {/* STAT 3: COMPLETED CONSULTATIONS */}
+        <Card className="flex items-center gap-4 p-5 border-2 border-blue-100 hover:border-blue-300 transition-all shadow-sm">
           <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
             <CheckCircle className="w-6 h-6" />
           </div>
           <div>
             <p className="text-xs text-slate-500 font-semibold uppercase">Đã Khám Xong</p>
-            <p className="text-2xl font-bold text-slate-800">{completedTodayCount} Bệnh nhân</p>
-          </div>
-        </Card>
-
-        <Card className="flex items-center gap-4 p-5">
-          <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
-            <Clock className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs text-slate-500 font-semibold uppercase">Đang Chờ Khám</p>
-            <p className="text-2xl font-bold text-slate-800">{remainingTodayCount} Bệnh nhân</p>
+            <p className="text-2xl font-bold text-slate-800">{completedAppts.length} Bệnh nhân</p>
+            <p className="text-[11px] text-blue-700 font-medium mt-0.5">
+              Tổng số hồ sơ & đơn thuốc đã kê
+            </p>
           </div>
         </Card>
       </div>
 
-      {/* TABS */}
+      {/* TABS CONTAINER */}
       <Card className="p-6">
         <Tabs
           tabs={[
-            { id: 'queue', label: 'Hàng Chờ Khám Hôm Nay', count: todayAppts.length, icon: <UserCheck className="w-4 h-4" /> },
-            { id: 'history', label: 'Lịch Sử Khám Bệnh', count: allAppts.length, icon: <FileCheck2 className="w-4 h-4" /> },
+            {
+              id: 'queue',
+              label: 'Hàng Chờ & Lịch Khám',
+              count: waitingAppts.length,
+              icon: <UserCheck className="w-4 h-4" />,
+            },
+            {
+              id: 'history',
+              label: 'Lịch Sử Đã Khám & Bệnh Án',
+              count: completedAppts.length,
+              icon: <FileCheck2 className="w-4 h-4" />,
+            },
+            {
+              id: 'cancelled',
+              label: 'Lịch Đã Hủy',
+              count: cancelledAppts.length,
+              icon: <Trash2 className="w-4 h-4" />,
+            },
           ]}
           activeTab={activeTab}
           onChange={setActiveTab}
@@ -266,107 +319,250 @@ export default function DoctorPortalPage() {
           <TableSkeleton rows={5} />
         ) : (
           <div>
+            {/* TAB 1: WAITING QUEUE & UPCOMING APPOINTMENTS */}
             {activeTab === 'queue' && (
               <div className="space-y-4">
-                {todayAppts.length === 0 ? (
+                {/* SUB-FILTER BUTTONS */}
+                <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-slate-100">
+                  <span className="text-xs font-bold text-slate-500 mr-1">Bộ lọc:</span>
+                  <button
+                    type="button"
+                    onClick={() => setQueueFilter('ALL')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      queueFilter === 'ALL'
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    Tất cả chờ khám ({waitingAppts.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setQueueFilter('TODAY')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      queueFilter === 'TODAY'
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    Hôm nay ({todayWaitingAppts.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setQueueFilter('UPCOMING')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      queueFilter === 'UPCOMING'
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    Lịch sắp tới ({futureWaitingAppts.length})
+                  </button>
+                </div>
+
+                {filteredWaitingAppts.length === 0 ? (
                   <div className="py-12 text-center text-slate-400 space-y-3">
                     <UserCheck className="w-12 h-12 mx-auto text-slate-300" />
-                    <p className="text-sm font-semibold">Chưa có lịch hẹn khám nào hôm nay.</p>
+                    <p className="text-sm font-semibold">
+                      {queueFilter === 'TODAY'
+                        ? 'Không có lịch hẹn khám nào cần tiếp nhận hôm nay.'
+                        : queueFilter === 'UPCOMING'
+                        ? 'Không có lịch hẹn khám sắp tới nào.'
+                        : 'Hiện tại không có bệnh nhân nào đang chờ khám.'}
+                    </p>
                   </div>
                 ) : (
-                  todayAppts.map((appt) => (
-                    <div
-                      key={appt.id}
-                      className="p-5 rounded-2xl border border-slate-100 bg-white hover:border-emerald-200 transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm"
-                    >
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm font-extrabold text-[#4fc3a1] bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200">
-                            Giờ hẹn: {appt.appointmentTime}
-                          </span>
-                          <span
-                            className={`px-3 py-0.5 rounded-full text-xs font-bold border ${getStatusBadgeStyle(
-                              appt.status
-                            )}`}
-                          >
-                            {getStatusLabel(appt.status)}
-                          </span>
+                  filteredWaitingAppts.map((appt) => {
+                    const isToday = appt.appointmentDate === todayStr;
+                    return (
+                      <div
+                        key={appt.id}
+                        className={`p-5 rounded-2xl border-2 transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm ${
+                          isToday
+                            ? 'border-emerald-200 bg-emerald-50/20 hover:border-emerald-400'
+                            : 'border-slate-200 bg-white hover:border-emerald-300'
+                        }`}
+                      >
+                        <div className="space-y-2">
+                          <div className="flex flex-wrap items-center gap-3">
+                            {isToday ? (
+                              <span className="text-xs font-extrabold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-xl border border-emerald-300 flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                                🟢 Hôm Nay lúc {appt.appointmentTime}
+                              </span>
+                            ) : (
+                              <span className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-xl border border-slate-200 flex items-center gap-1.5">
+                                <Calendar className="w-3.5 h-3.5 text-emerald-600" />
+                                {formatDate(appt.appointmentDate)} lúc {appt.appointmentTime}
+                              </span>
+                            )}
+
+                            <span
+                              className={`px-3 py-0.5 rounded-full text-xs font-bold border ${getStatusBadgeStyle(
+                                appt.status
+                              )}`}
+                            >
+                              {getStatusLabel(appt.status)}
+                            </span>
+
+                            {appt.specialty?.name && (
+                              <span className="text-xs font-semibold text-slate-600 bg-white px-2.5 py-0.5 rounded-lg border border-slate-200">
+                                Khoa: {appt.specialty.name}
+                              </span>
+                            )}
+                          </div>
+
+                          <div>
+                            <h3 className="text-lg font-bold text-slate-900">
+                              Bệnh Nhân: {appt.patient?.fullName}
+                            </h3>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              SĐT: <strong>{appt.patient?.phone || 'Chưa cập nhật'}</strong> • Email: {appt.patient?.email || 'N/A'}
+                            </p>
+                          </div>
+
+                          {appt.patientNotes && (
+                            <p className="text-xs text-slate-700 bg-white p-2.5 rounded-xl border border-slate-200 italic">
+                              Triệu chứng khai báo: "{appt.patientNotes}"
+                            </p>
+                          )}
                         </div>
 
                         <div>
-                          <h3 className="text-lg font-bold text-slate-800">
-                            Bệnh Nhân: {appt.patient?.fullName}
-                          </h3>
-                          <p className="text-xs text-slate-500">
-                            SĐT: {appt.patient?.phone} • Email: {appt.patient?.email}
-                          </p>
+                          {appt.status === 'NEEDS_REASSIGNMENT' ? (
+                            <Badge variant="rose" className="px-3 py-1 text-xs font-bold">
+                              Đã Báo Đổi Bác Sĩ Gấp
+                            </Badge>
+                          ) : (
+                            <Button
+                              onClick={() => handleOpenConsultation(appt)}
+                              className="bg-emerald-600 hover:bg-emerald-700 font-bold px-4 py-2.5 shadow-md shadow-emerald-900/10"
+                            >
+                              <Stethoscope className="w-4 h-4 mr-1.5" /> Bắt Đầu Khám & Kê Đơn
+                            </Button>
+                          )}
                         </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
 
-                        {appt.patientNotes && (
-                          <p className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 italic">
-                            Triệu chứng bệnh nhân mô tả: "{appt.patientNotes}"
+            {/* TAB 2: COMPLETED MEDICAL RECORDS */}
+            {activeTab === 'history' && (
+              <div className="space-y-4">
+                {completedAppts.length === 0 ? (
+                  <div className="py-12 text-center text-slate-400 space-y-3">
+                    <FileCheck2 className="w-12 h-12 mx-auto text-slate-300" />
+                    <p className="text-sm font-semibold">Chưa có ca khám bệnh nào được hoàn tất.</p>
+                  </div>
+                ) : (
+                  completedAppts.map((appt) => (
+                    <div
+                      key={appt.id}
+                      className="p-5 rounded-2xl border-2 border-slate-200 bg-white hover:border-emerald-300 transition-all space-y-3 shadow-sm"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-2">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-slate-500">
+                              {formatDate(appt.appointmentDate)} lúc {appt.appointmentTime}
+                            </span>
+                            <Badge variant="blue" className="text-xs font-bold">
+                              ✓ Đã Khám & Kê Đơn Xong
+                            </Badge>
+                          </div>
+                          <h4 className="font-bold text-slate-900 text-base">
+                            Bệnh nhân: {appt.patient?.fullName} ({appt.patient?.phone})
+                          </h4>
+                        </div>
+                      </div>
+
+                      {appt.medicalRecord && (
+                        <div className="text-xs space-y-2 text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                          <p>
+                            <strong className="text-slate-900">Triệu chứng lâm sàng:</strong>{' '}
+                            {appt.medicalRecord.symptoms}
                           </p>
-                        )}
-                      </div>
+                          <p>
+                            <strong className="text-emerald-800 font-bold">Chẩn đoán y khoa:</strong>{' '}
+                            <span className="font-bold text-slate-900">{appt.medicalRecord.diagnosis}</span>
+                          </p>
+                          {appt.medicalRecord.notes && (
+                            <p>
+                              <strong className="text-slate-900">Lời khuyên bác sĩ:</strong>{' '}
+                              {appt.medicalRecord.notes}
+                            </p>
+                          )}
 
-                      <div>
-                        {appt.status === 'COMPLETED' ? (
-                          <Badge variant="blue" className="px-3 py-1 text-xs font-bold">
-                            ✓ Đã Khám & Kê Đơn Xong
-                          </Badge>
-                        ) : appt.status === 'NEEDS_REASSIGNMENT' ? (
-                          <Badge variant="rose" className="px-3 py-1 text-xs font-bold">
-                            Đã Báo Đổi Bác Sĩ Gấp
-                          </Badge>
-                        ) : (
-                          <Button onClick={() => handleOpenConsultation(appt)}>
-                            <Stethoscope className="w-4 h-4 mr-1.5" /> Bắt Đầu Khám
-                          </Button>
-                        )}
-                      </div>
+                          {appt.medicalRecord.prescriptions && appt.medicalRecord.prescriptions.length > 0 && (
+                            <div className="pt-2 border-t border-slate-200 mt-2">
+                              <p className="font-bold text-slate-800 flex items-center gap-1.5 mb-1.5">
+                                <Pill className="w-3.5 h-3.5 text-emerald-600" /> Đơn thuốc đã kê ({appt.medicalRecord.prescriptions.length} loại thuốc):
+                              </p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {appt.medicalRecord.prescriptions.map((p, idx) => (
+                                  <div key={idx} className="bg-white p-2.5 rounded-lg border border-slate-200 text-[11px]">
+                                    <span className="font-bold text-slate-800">
+                                      {idx + 1}. {p.medicineName}
+                                    </span>{' '}
+                                    ({p.dosage})
+                                    <p className="text-slate-500 mt-0.5">
+                                      {p.frequency} • {p.duration}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
               </div>
             )}
 
-            {activeTab === 'history' && (
+            {/* TAB 3: CANCELLED APPOINTMENTS */}
+            {activeTab === 'cancelled' && (
               <div className="space-y-4">
-                {allAppts.map((appt) => (
-                  <div
-                    key={appt.id}
-                    className="p-5 rounded-2xl border border-slate-100 bg-white flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
-                  >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-500">
-                          {formatDate(appt.appointmentDate)} lúc {appt.appointmentTime}
-                        </span>
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${getStatusBadgeStyle(
-                            appt.status
-                          )}`}
-                        >
-                          {getStatusLabel(appt.status)}
-                        </span>
-                      </div>
-                      <h4 className="font-bold text-slate-800 text-base">
-                        Bệnh nhân: {appt.patient?.fullName}
-                      </h4>
-                      {appt.medicalRecord && (
-                        <p className="text-xs text-emerald-700 font-semibold">
-                          Chẩn đoán: {appt.medicalRecord.diagnosis}
-                        </p>
-                      )}
-                    </div>
-
-                    {appt.status !== 'COMPLETED' && appt.status !== 'CANCELLED' && (
-                      <Button size="sm" variant="outline" onClick={() => handleOpenConsultation(appt)}>
-                        Khám Cho Bệnh Nhân
-                      </Button>
-                    )}
+                {cancelledAppts.length === 0 ? (
+                  <div className="py-12 text-center text-slate-400 space-y-3">
+                    <Trash2 className="w-12 h-12 mx-auto text-slate-300" />
+                    <p className="text-sm font-semibold">Không có lịch hẹn nào bị hủy.</p>
                   </div>
-                ))}
+                ) : (
+                  cancelledAppts.map((appt) => (
+                    <div
+                      key={appt.id}
+                      className="p-5 rounded-2xl border border-slate-200 bg-slate-50/50 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-500">
+                            {formatDate(appt.appointmentDate)} lúc {appt.appointmentTime}
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-200 text-slate-600">
+                            Đã Hủy Lịch
+                          </span>
+                        </div>
+                        <h4 className="font-bold text-slate-800 text-base">
+                          Bệnh nhân: {appt.patient?.fullName} ({appt.patient?.phone})
+                        </h4>
+                        {appt.patientNotes && (
+                          <p className="text-xs text-slate-500 italic">
+                            Triệu chứng ban đầu: "{appt.patientNotes}"
+                          </p>
+                        )}
+                      </div>
+
+                      <span className="text-xs text-slate-400 font-semibold bg-white px-3 py-1.5 rounded-xl border border-slate-200">
+                        Bệnh nhân đã hủy lịch hẹn
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
             )}
           </div>
