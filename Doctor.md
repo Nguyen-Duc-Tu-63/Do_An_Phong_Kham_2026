@@ -160,16 +160,33 @@ Khi bác sĩ bấm **"🩺 Bắt Đầu Khám & Kê Đơn"**:
 
 ---
 
-### Luồng 5: Quy Trình Báo Bận Đột Xuất & Kích Hoạt Điều Phối Khẩn Cấp
-Trong trường hợp bác sĩ gặp sự cố bất khả kháng (sốt cao, việc khẩn):
+### Luồng 5: Quy Trình Báo Bận Đột Xuất & Kích Hoạt Điều Phối Khẩn Cấp (Urgent Unavailability & Reassignment)
 
-1. Bác sĩ bấm nút **"⚠️ Báo Đột Xuất Bận Khám"** trên Banner làm việc.
-2. Nhập lý do vắng mặt trong Modal xác nhận.
-3. Bấm **"Gửi Thông Báo Khẩn"** -> Gửi `POST /api/doctor/urgent-unavailability`.
-4. **Cơ chế tự động của hệ thống:**
-   - Toàn bộ các ca khám chưa hoàn tất trong ngày của bác sĩ được chuyển trạng thái sang `NEEDS_REASSIGNMENT`.
-   - Hệ thống tự động tạo bản ghi `Notification` loại `URGENT_DOCTOR_BUSY` gửi tới tài khoản Admin/Lễ tân.
-   - Bảng điều khiển Admin sẽ hiện cảnh báo đỏ tại tab *"Xử Lý Đổi Lịch Khẩn"* để phân công bác sĩ thay thế ngay lập tức.
+#### 1. Mục Đích & Ý Nghĩa Nghiệp Vụ Thực Tế:
+Trong thực tế hoạt động phòng khám, bác sĩ có thể gặp sự cố bất khả kháng (sốt cao đột xuất, tai nạn, việc gia đình khẩn cấp, ca cấp cứu ngoài dự kiến). Nếu không có quy trình xử lý khẩn, bệnh nhân đến phòng khám sẽ phải chờ đợi vô ích, gây bức xúc và làm gián đoạn vận hành phòng khám. Tính năng này thiết lập một **quy trình điều phối tự động & thông suốt 4 bên** (Bác sĩ ➔ Backend Hệ thống ➔ Quản lý/Lễ tân ➔ Bệnh nhân).
+
+#### 2. Chi Tiết 4 Giai Đoạn Vận Hành:
+
+- **Giai đoạn 1: Bác Sĩ Kích Hoạt Báo Bận ([`src/app/doctor/page.tsx`](file:///d:/PhongKham2026/src/app/doctor/page.tsx))**
+  1. Bác sĩ bấm nút **"⚠️ Báo Đột Xuất Bận Khám"** màu đỏ nổi bật trên banner làm việc.
+  2. Hệ thống mở Modal xác nhận và yêu cầu bác sĩ nhập lý do vắng mặt (Ví dụ: *"Sốt cao đột xuất", "Bận việc gia đình khẩn"*).
+  3. Bấm **"Gửi Thông Báo Khẩn"** ➔ Hệ thống gửi request `POST /api/doctor/urgent-unavailability`.
+
+- **Giai đoạn 2: Cơ Chế Tự Động Hóa Backend ([`route.ts`](file:///d:/PhongKham2026/src/app/api/doctor/urgent-unavailability/route.ts))**
+  1. **Lọc ca khám bị ảnh hưởng:** Truy vấn SQLite DB tìm toàn bộ lịch hẹn trong ngày hôm nay (`todayStr`) của bác sĩ này đang ở trạng thái `CONFIRMED` hoặc `PENDING`.
+  2. **Cập nhật trạng thái hàng loạt:** Chuyển tất cả các ca khám này sang trạng thái **`NEEDS_REASSIGNMENT`** (Cần đổi bác sĩ gấp).
+  3. **Phát tín hiệu khẩn tới Lễ tân:** Tạo các bản ghi `Notification` loại **`URGENT_DOCTOR_BUSY`** gửi tới toàn bộ tài khoản Admin/Lễ tân:
+     > *"URGENT: BS. [Tên Bác Sĩ] báo bận đột xuất ("[Lý do]"). Lịch hẹn lúc [Giờ] cần đổi bác sĩ ngay!"*
+
+- **Giai đoạn 3: Phía Lễ Tân / Quản Lý Tiếp Nhận & Điều Phối ([`src/app/admin/page.tsx`](file:///d:/PhongKham2026/src/app/admin/page.tsx))**
+  1. Trên Header trang Quản lý xuất hiện nút cảnh báo đỏ nhấp nháy: **`Có X Lịch Cần Đổi Bác Sĩ Gấp!`**.
+  2. Quản lý bấm vào để chuyển thẳng đến tab **"Xử Lý Đổi Lịch Khẩn"**.
+  3. Bấm **"Phân Bác Sĩ Thay Thế"**: Chọn bác sĩ khác cùng chuyên khoa còn trống lịch hoặc đổi sang khung giờ thích hợp.
+  4. Hệ thống kiểm tra trùng lịch (Conflict check) đảm bảo bác sĩ mới không bị trùng ca ➔ Gọi `POST /api/appointments/reassign` ➔ Chuyển lịch hẹn về lại trạng thái **`CONFIRMED`**.
+
+- **Giai đoạn 4: Cập Nhật Minh Bạch Cho Bệnh Nhân ([`src/app/dashboard/page.tsx`](file:///d:/PhongKham2026/src/app/dashboard/page.tsx))**
+  1. Trong thời gian chờ xử lý, lịch hẹn của bệnh nhân hiển thị badge cảnh báo: *"Cần đổi bác sĩ gấp (Phòng khám đang tự động sắp xếp)"*.
+  2. Ngay khi Lễ tân hoàn tất điều phối, lịch hẹn tự động hiển thị tên Bác sĩ mới phụ trách và thông tin giờ khám mà bệnh nhân không cần phải thao tác đặt lại từ đầu.
 
 ---
 
@@ -208,21 +225,28 @@ Tab **"Lịch Đã Hủy"** thống kê các ca khám bệnh nhân đã tự h�
    |    (Chuyển sang Tab Lịch Sử)                                 |                         |
 ```
 
-### Sơ đồ 2: Quy trình Báo bận đột xuất & Điều phối khẩn cấp
+### Sơ đồ 2: Quy trình Báo bận đột xuất & Điều phối thay thế 4 bên
 ```
-[Bác Sĩ]              [Doctor Portal (UI)]       [API /urgent-unavailability]      [Admin / Lễ Tân]
-   |                            |                                 |                         |
-   |--- 1. Báo Bận Đột Xuất --->|                                 |                         |
-   |--- 2. Nhập Lý Do Bận ----->|--- 3. POST /urgent-unavailability|                         |
-   |                            |       (doctorId, reason) ------>|                         |
-   |                            |                                 |--- 4. Update Appts ---->|
-   |                            |                                 |  status=NEEDS_REASSIGN  |
-   |                            |                                 |--- 5. Create Alert ---->|
-   |                            |<-- 6. HTTP 200 OK --------------|   Notification (ADMIN)  |
-   |<-- 7. Toast Cảnh Báo ------|                                 |                         |
-   |                            |                                 |==== 8. Banner Khẩn ====>|
-   |                            |                                 |   (Admin phân bác sĩ mới|
-   |                            |                                 |    hoặc đổi giờ khám)   |
+[Bác Sĩ]             [Doctor Portal]      [API /urgent-unavailability]     [SQLite DB]        [Admin / Lễ Tân]       [Bệnh Nhân]
+   |                        |                          |                        |                     |                 |
+   |-- 1. Báo bận khẩn ---->|                          |                        |                     |                 |
+   |   (Nhập lý do vắng)    |-- 2. POST /api/doctor/ ->|                        |                     |                 |
+   |                        |      urgent-unavailability                        |                     |                 |
+   |                        |                          |-- 3. Query appts ----->|                     |                 |
+   |                        |                          |   (today, doctorId)    |                     |                 |
+   |                        |                          |-- 4. Update status --->|                     |                 |
+   |                        |                          |   NEEDS_REASSIGNMENT   |                     |                 |
+   |                        |                          |-- 5. Create Notif ---->|                     |                 |
+   |                        |                          |   (URGENT_DOCTOR_BUSY) |                     |                 |
+   |                        |<-- 6. HTTP 200 OK -------|                        |                     |                 |
+   |<-- 7. Toast xác nhận --|                          |                        |-- 8. Alert Banner ->|                 |
+   |                        |                          |                        |   (Cảnh báo đỏ)     |                 |
+   |                        |                          |                        |                     |-- 9. Reassign ->|
+   |                        |                          |                        |                     |   (Chọn BS mới) |
+   |                        |                          |                        |                     |-- 10. POST ---> |
+   |                        |                          |                        |                     |  /reassign      |
+   |                        |                          |                        |<-- 11. CONFIRMED ---|                 |
+   |                        |                          |                        |                     |                 |<-- 12. Xem BS mới
 ```
 
 ---
@@ -249,6 +273,43 @@ Tab **"Lịch Đã Hủy"** thống kê các ca khám bệnh nhân đã tự h�
    - Thẻ lịch hẹn hôm nay có viền xanh lá và đèn hiệu nhấp nháy (`animate-ping`) giúp bác sĩ không bao giờ bỏ sót bệnh nhân đang có mặt tại phòng khám.
 4. **Tương thích mọi thiết bị:**
    - Bác sĩ có thể sử dụng mượt mà trên iPad/Tablet khi đi buồng khám hoặc trên máy tính bàn phòng khám chuyên khoa.
+
+## 8. DANH BẠ ĐỘI NGŨ 30 BÁC SĨ PHÒNG KHÁM (3 BÁC SĨ / CHUYÊN KHOA)
+
+| STT | Chuyên Khoa | Bác Sĩ Phụ Trách | Học Vị & Bằng Cấp | Kinh Nghiệm | Email Đăng Nhập |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 1 | **Khoa Tim Mạch** | BS CKI. Lê Thị Thanh Hà | Bác sĩ CKI. Tim Mạch Học | 14 năm | `doctor1@clinic.com` |
+| 2 | **Khoa Tim Mạch** | BS CKI. Phan Thị Kim Ngân | Bác sĩ CKI. Tim Mạch & Can Thiệp | 11 năm | `doctor11@clinic.com` |
+| 3 | **Khoa Tim Mạch** | BS CKII. Nguyễn Hoàng Nam | Bác sĩ CKII. Tim Mạch Lâm Sàng | 17 năm | `doctor13@clinic.com` |
+| 4 | **Khoa Nhi** | ThS BS. Nguyễn Minh Triết | Thạc sĩ Bác sĩ Nhi Khoa | 10 năm | `doctor2@clinic.com` |
+| 5 | **Khoa Nhi** | ThS BS. Đoàn Nhật Huy | Thạc sĩ Bác sĩ Nhi - Hô Hấp | 9 năm | `doctor12@clinic.com` |
+| 6 | **Khoa Nhi** | BS CKI. Đỗ Thị Thu Trang | Bác sĩ CKI. Nhi Sơ Sinh & Dinh Dưỡng | 12 năm | `doctor14@clinic.com` |
+| 7 | **Khoa Da Liễu** | BS. Trần Hoàng Yến | Bác sĩ Chuyên Khoa Da Liễu | 8 năm | `doctor3@clinic.com` |
+| 8 | **Khoa Da Liễu** | ThS BS. Trần Tuấn Anh | Thạc sĩ Bác sĩ Da Liễu & Thẩm Mỹ Da | 11 năm | `doctor15@clinic.com` |
+| 9 | **Khoa Da Liễu** | BS CKI. Lê Mai Phương | Bác sĩ CKI. Da Liễu Học | 13 năm | `doctor16@clinic.com` |
+| 10 | **Khoa Nội Tổng Quát** | ThS BS. Phạm Quốc Bảo | Thạc sĩ Bác sĩ Nội Khoa | 12 năm | `doctor4@clinic.com` |
+| 11 | **Khoa Nội Tổng Quát** | BS CKII. Đặng Hữu Phúc | Bác sĩ CKII. Nội Tổng Quát | 19 năm | `doctor17@clinic.com` |
+| 12 | **Khoa Nội Tổng Quát** | ThS BS. Nguyễn Bích Ngọc | Thạc sĩ Bác sĩ Nội Tiết & Dinh Dưỡng | 10 năm | `doctor18@clinic.com` |
+| 13 | **Khoa Tai Mũi Họng** | BS CKII. Võ Minh Hoàng | Bác sĩ CKII. Tai Mũi Họng | 16 năm | `doctor5@clinic.com` |
+| 14 | **Khoa Tai Mũi Họng** | ThS BS. Hoàng Minh Quân | Thạc sĩ Bác sĩ Tai Mũi Họng | 12 năm | `doctor19@clinic.com` |
+| 15 | **Khoa Tai Mũi Họng** | BS CKI. Lê Thị Hải Yến | Bác sĩ CKI. Tai Mũi Họng Nhi | 10 năm | `doctor20@clinic.com` |
+| 16 | **Khoa Mắt (Nhãn Khoa)** | ThS BS. Đặng Ngọc Anh | Thạc sĩ Bác sĩ Nhãn Khoa | 11 năm | `doctor6@clinic.com` |
+| 17 | **Khoa Mắt (Nhãn Khoa)** | BS CKII. Vũ Đình Trọng | Bác sĩ CKII. Nhãn Khoa | 18 năm | `doctor21@clinic.com` |
+| 18 | **Khoa Mắt (Nhãn Khoa)** | ThS BS. Phan Thảo My | Thạc sĩ Bác sĩ Nhãn Khoa Trẻ Em | 9 năm | `doctor22@clinic.com` |
+| 19 | **Khoa Răng Hàm Mặt** | BS CKI. Bùi Tuấn Kiệt | Bác sĩ CKI. Răng Hàm Mặt & Chỉnh Nha | 9 năm | `doctor7@clinic.com` |
+| 20 | **Khoa Răng Hàm Mặt** | ThS BS. Nguyễn Thành Long | Thạc sĩ Bác sĩ Chỉnh Nha & Răng Trẻ Em | 11 năm | `doctor23@clinic.com` |
+| 21 | **Khoa Răng Hàm Mặt** | BS CKI. Phạm Minh Châu | Bác sĩ CKI. Cấy Ghép Implant & Phục Hình | 13 năm | `doctor24@clinic.com` |
+| 22 | **Khoa Cơ Xương Khớp** | TS BS. Hoàng Đức Thắng | Tiến sĩ Bác sĩ Cơ Xương Khớp | 18 năm | `doctor8@clinic.com` |
+| 23 | **Khoa Cơ Xương Khớp** | BS CKII. Bùi Quang Huy | Bác sĩ CKII. Chấn Thương Chỉnh Hình | 16 năm | `doctor25@clinic.com` |
+| 24 | **Khoa Cơ Xương Khớp** | ThS BS. Trần Thị Ánh Tuyết | Thạc sĩ Bác sĩ Thấp Khớp Học | 10 năm | `doctor26@clinic.com` |
+| 25 | **Khoa Sản Phụ Khoa** | BS CKI. Vũ Thùy Linh | Bác sĩ CKI. Sản Phụ Khoa | 12 năm | `doctor9@clinic.com` |
+| 26 | **Khoa Sản Phụ Khoa** | BS CKII. Đặng Thanh Nga | Bác sĩ CKII. Sản Phụ Khoa | 17 năm | `doctor27@clinic.com` |
+| 27 | **Khoa Sản Phụ Khoa** | ThS BS. Lê Hồng Hạnh | Thạc sĩ Bác sĩ Phụ Khoa & Nội Tiết Sinh Sản | 11 năm | `doctor28@clinic.com` |
+| 28 | **Khoa Tiêu Hóa - Gan Mật** | ThS BS. Trương Gia Bảo | Thạc sĩ Bác sĩ Tiêu Hóa & Nội Soi | 13 năm | `doctor10@clinic.com` |
+| 29 | **Khoa Tiêu Hóa - Gan Mật** | BS CKII. Ngô Văn Dũng | Bác sĩ CKII. Gan Mật Tụy | 18 năm | `doctor29@clinic.com` |
+| 30 | **Khoa Tiêu Hóa - Gan Mật** | ThS BS. Hoàng Thị Diệu Linh | Thạc sĩ Bác sĩ Nội Soi Tiêu Hóa | 10 năm | `doctor30@clinic.com` |
+
+> 🔑 **Mật khẩu mặc định cho toàn bộ tài khoản bác sĩ:** `password123`
 
 ---
 *Tài liệu được biên soạn và cập nhật theo phiên bản hệ thống Phòng Khám CarePlus+ 2026.*

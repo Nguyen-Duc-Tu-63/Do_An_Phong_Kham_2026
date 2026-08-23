@@ -58,61 +58,65 @@ export function RoleSwitcherBanner() {
   };
 
   return (
-    <div className="bg-slate-900 text-white text-xs px-4 py-2 flex flex-wrap items-center justify-between border-b border-slate-800 gap-2">
-      <div className="flex items-center gap-2">
-        <span className="flex items-center gap-1 bg-[#4fc3a1]/20 text-[#4fc3a1] px-2.5 py-0.5 rounded-full font-semibold border border-[#4fc3a1]/30">
-          <Sparkles className="w-3 h-3" /> THANH DEMO THỬ NGHIỆM
+    <div className="bg-slate-900 text-white text-[11px] sm:text-xs px-3 sm:px-4 py-1.5 sm:py-2 flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 gap-1.5 sm:gap-2">
+      <div className="flex items-center justify-between sm:justify-start gap-2">
+        <span className="flex items-center gap-1 bg-[#4fc3a1]/20 text-[#4fc3a1] px-2 py-0.5 rounded-full font-semibold border border-[#4fc3a1]/30 whitespace-nowrap text-[10px] sm:text-xs">
+          <Sparkles className="w-3 h-3 shrink-0" /> THANH DEMO
         </span>
-        <span className="text-slate-300 hidden sm:inline">
-          Trạng thái: <strong className="text-white">{userName || 'Đang tải...'}</strong>
+        <span className="text-slate-300 text-[11px] sm:text-xs truncate max-w-[200px] sm:max-w-none">
+          <strong className="text-white">{userName || 'Đang tải...'}</strong>
         </span>
       </div>
 
-      <div className="flex items-center gap-1.5">
-        <span className="text-slate-400 font-medium mr-1">Chuyển giao diện:</span>
+      <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto scrollbar-none pb-0.5 sm:pb-0 shrink-0">
+        <span className="text-slate-400 font-medium mr-1 text-[11px] sm:text-xs hidden md:inline shrink-0">Chuyển vai trò:</span>
 
         <button
           onClick={() => handleSwitchRole('GUEST')}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+          className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg transition-all text-[11px] sm:text-xs whitespace-nowrap shrink-0 ${
             currentRole === null
               ? 'bg-amber-500 text-white font-bold'
               : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
           }`}
+          title="Giao diện Khách chưa đăng nhập"
         >
-          <UserX className="w-3.5 h-3.5" /> Khách (Chưa đăng nhập)
+          <UserX className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" /> Khách
         </button>
 
         <button
           onClick={() => handleSwitchRole('PATIENT')}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+          className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg transition-all text-[11px] sm:text-xs whitespace-nowrap shrink-0 ${
             currentRole === 'PATIENT'
               ? 'bg-[#4fc3a1] text-white font-bold'
               : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
           }`}
+          title="Giao diện Bệnh Nhân"
         >
-          <User className="w-3.5 h-3.5" /> Bệnh Nhân
+          <User className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" /> Bệnh Nhân
         </button>
 
         <button
           onClick={() => handleSwitchRole('DOCTOR')}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+          className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg transition-all text-[11px] sm:text-xs whitespace-nowrap shrink-0 ${
             currentRole === 'DOCTOR'
               ? 'bg-[#4fc3a1] text-white font-bold'
               : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
           }`}
+          title="Giao diện Bác Sĩ"
         >
-          <Stethoscope className="w-3.5 h-3.5" /> Bác Sĩ
+          <Stethoscope className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" /> Bác Sĩ
         </button>
 
         <button
           onClick={() => handleSwitchRole('ADMIN')}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+          className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg transition-all text-[11px] sm:text-xs whitespace-nowrap shrink-0 ${
             currentRole === 'ADMIN'
               ? 'bg-[#4fc3a1] text-white font-bold'
               : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
           }`}
+          title="Giao diện Quản Lý"
         >
-          <Shield className="w-3.5 h-3.5" /> Quản Lý
+          <Shield className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" /> Quản Lý
         </button>
       </div>
     </div>

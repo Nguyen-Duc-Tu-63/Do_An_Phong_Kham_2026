@@ -179,20 +179,35 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
-      <div className="max-w-md w-full space-y-6">
-        <div className="text-center space-y-2">
-          <div className="w-14 h-14 rounded-2xl bg-[#10b981] text-white flex items-center justify-center mx-auto font-bold shadow-lg shadow-emerald-500/25">
-            <HeartPulse className="w-8 h-8" />
+    <div className="relative min-h-[calc(100vh-5rem)] flex items-center justify-center px-4 py-10 md:py-16 overflow-hidden">
+      {/* BACKGROUND IMAGE WITH BLUR & MEDICAL GRADIENT OVERLAYS */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-110 filter blur-[8px] md:blur-[10px] transform"
+          style={{
+            backgroundImage: "url('/images/medical-auth-bg.jpg')",
+          }}
+        />
+        {/* Deep frosted medical overlay for contrast and sleek appearance */}
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/60 via-slate-900/45 to-emerald-950/70" />
+        <div className="absolute inset-0 bg-emerald-900/20 backdrop-blur-[2px]" />
+      </div>
+
+      <div className="relative z-10 max-w-md w-full space-y-6">
+        <div className="text-center space-y-2.5">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#10b981] to-teal-400 text-white flex items-center justify-center mx-auto font-bold shadow-xl shadow-emerald-500/30 ring-4 ring-white/30 backdrop-blur-sm">
+            <HeartPulse className="w-9 h-9" />
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900">Đăng Nhập CarePlus+</h1>
-          <p className="text-xs text-slate-500">
-            Dùng <strong>Số Điện Thoại</strong> để truy cập hồ sơ bệnh nhân hoặc tài khoản bác sĩ / quản lý
+          <h1 className="text-3xl font-extrabold text-white tracking-tight drop-shadow-md">
+            Đăng Nhập CarePlus+
+          </h1>
+          <p className="text-xs text-emerald-100/90 font-medium drop-shadow-sm">
+            Dùng <strong className="text-white font-bold">Số Điện Thoại</strong> để truy cập hồ sơ bệnh nhân hoặc tài khoản bác sĩ / quản lý
           </p>
         </div>
 
         {/* DEMO ACCOUNTS BOX */}
-        <div className="bg-emerald-50/80 border-2 border-emerald-200 p-4 rounded-2xl space-y-3">
+        <div className="bg-white/90 backdrop-blur-md border border-emerald-200/80 p-4 rounded-2xl space-y-3 shadow-xl shadow-slate-950/10">
           <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-900">
             <Sparkles className="w-4 h-4 text-emerald-600" /> Nút Đăng Nhập Nhanh Trải Nghiệm Demo:
           </div>
@@ -200,31 +215,31 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => handleQuickDemoLogin('PATIENT')}
-              className="p-2.5 bg-white rounded-xl border border-emerald-200 text-xs font-bold text-slate-800 hover:bg-emerald-100 flex flex-col items-center gap-1 shadow-xs transition-all cursor-pointer"
+              className="p-2.5 bg-white/90 hover:bg-emerald-50 rounded-xl border border-emerald-200 text-xs font-bold text-slate-800 flex flex-col items-center gap-1 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-emerald-400 group"
             >
-              <User className="w-4 h-4 text-emerald-600" /> Bệnh Nhân
+              <User className="w-4 h-4 text-emerald-600 group-hover:scale-110 transition-transform" /> Bệnh Nhân
               <span className="text-[10px] text-slate-400 font-normal">0901234567</span>
             </button>
             <button
               type="button"
               onClick={() => handleQuickDemoLogin('DOCTOR')}
-              className="p-2.5 bg-white rounded-xl border border-emerald-200 text-xs font-bold text-slate-800 hover:bg-emerald-100 flex flex-col items-center gap-1 shadow-xs transition-all cursor-pointer"
+              className="p-2.5 bg-white/90 hover:bg-sky-50 rounded-xl border border-emerald-200 text-xs font-bold text-slate-800 flex flex-col items-center gap-1 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-sky-400 group"
             >
-              <Stethoscope className="w-4 h-4 text-sky-600" /> Bác Sĩ
+              <Stethoscope className="w-4 h-4 text-sky-600 group-hover:scale-110 transition-transform" /> Bác Sĩ
               <span className="text-[10px] text-slate-400 font-normal">0912345601</span>
             </button>
             <button
               type="button"
               onClick={() => handleQuickDemoLogin('ADMIN')}
-              className="p-2.5 bg-white rounded-xl border border-emerald-200 text-xs font-bold text-slate-800 hover:bg-emerald-100 flex flex-col items-center gap-1 shadow-xs transition-all cursor-pointer"
+              className="p-2.5 bg-white/90 hover:bg-purple-50 rounded-xl border border-emerald-200 text-xs font-bold text-slate-800 flex flex-col items-center gap-1 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-purple-400 group"
             >
-              <Shield className="w-4 h-4 text-purple-600" /> Quản Lý
+              <Shield className="w-4 h-4 text-purple-600 group-hover:scale-110 transition-transform" /> Quản Lý
               <span className="text-[10px] text-slate-400 font-normal">0909000001</span>
             </button>
           </div>
         </div>
 
-        <Card className="p-6 md:p-8 border-2 border-slate-200 shadow-card">
+        <Card className="p-6 md:p-8 bg-white/95 backdrop-blur-xl border border-white/80 shadow-2xl shadow-slate-950/20 rounded-3xl">
           <form onSubmit={handleLogin} className="space-y-4">
             <Input
               label="Số Điện Thoại Đăng Nhập *"
@@ -264,25 +279,25 @@ export default function LoginPage() {
             </div>
 
             <div className="flex justify-between items-center text-xs text-slate-500 pt-1">
-              <span>(Mật khẩu mặc định: password123)</span>
+              <span>(Mật khẩu mặc định: <strong className="text-slate-700 font-mono">password123</strong>)</span>
             </div>
 
-            <Button type="submit" isLoading={isLoading} className="w-full shadow-lg bg-[#10b981] hover:bg-emerald-600 font-bold py-2.5">
+            <Button type="submit" isLoading={isLoading} className="w-full shadow-lg shadow-emerald-500/25 bg-gradient-to-r from-[#10b981] to-teal-600 hover:from-emerald-600 hover:to-teal-700 font-bold py-2.5 rounded-xl transition-all">
               Đăng Nhập Bằng Số Điện Thoại
             </Button>
           </form>
         </Card>
 
         {/* EXTRA HELP OPTIONS */}
-        <div className="space-y-3 text-center text-xs text-slate-500">
+        <div className="bg-white/90 backdrop-blur-md border border-white/60 rounded-2xl p-4 shadow-lg shadow-slate-950/10 space-y-2.5 text-center text-xs text-slate-600">
           <p>
             Chưa có tài khoản bệnh nhân?{' '}
             <Link href="/register" className="font-bold text-emerald-600 hover:underline">
               Đăng Ký Bằng SĐT Tại Đây
             </Link>
           </p>
-          <div className="pt-2 border-t border-slate-200">
-            <Link href="/dashboard" className="inline-flex items-center gap-1 font-bold text-slate-700 hover:text-emerald-600">
+          <div className="pt-2 border-t border-slate-200/80">
+            <Link href="/dashboard" className="inline-flex items-center gap-1 font-bold text-slate-700 hover:text-emerald-600 transition-colors">
               ⚡ Hoặc tra cứu nhanh hồ sơ bằng SĐT (Không cần mật khẩu) <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
             </Link>
           </div>

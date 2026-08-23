@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -31,6 +31,13 @@ export default function HomePage() {
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
   const [doctors, setDoctors] = useState<DoctorInfo[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Rút gọn: Chỉ chọn 8 Bác Sĩ tiêu biểu có nhiều năm kinh nghiệm nhất
+  const featuredDoctors = useMemo(() => {
+    return [...doctors]
+      .sort((a, b) => b.experienceYears - a.experienceYears)
+      .slice(0, 8);
+  }, [doctors]);
 
   useEffect(() => {
     async function loadData() {
@@ -119,18 +126,18 @@ export default function HomePage() {
           </div>
 
           {/* Key Clinic Stats */}
-          <div className="pt-6 grid grid-cols-3 gap-4 max-w-lg mx-auto bg-white/95 backdrop-blur-md rounded-2xl p-5 shadow-lg shadow-slate-200/50 border-2 border-emerald-200/90">
+          <div className="pt-4 sm:pt-6 grid grid-cols-3 gap-2 sm:gap-4 max-w-lg mx-auto bg-white/95 backdrop-blur-md rounded-2xl p-3 sm:p-5 shadow-lg shadow-slate-200/50 border-2 border-emerald-200/90">
             <div>
-              <p className="text-2xl sm:text-3xl font-extrabold text-[#0d9488]">15,000+</p>
-              <p className="text-xs sm:text-sm font-semibold text-slate-600 mt-0.5">Bệnh nhân tin dùng</p>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#0d9488]">15,000+</p>
+              <p className="text-[10px] sm:text-xs font-semibold text-slate-600 mt-0.5">Bệnh nhân tin dùng</p>
             </div>
-            <div className="border-x-2 border-emerald-100 px-4">
-              <p className="text-2xl sm:text-3xl font-extrabold text-[#0d9488]">25+</p>
-              <p className="text-xs sm:text-sm font-semibold text-slate-600 mt-0.5">Bác sĩ chuyên khoa</p>
+            <div className="border-x-2 border-emerald-100 px-2 sm:px-4">
+              <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#0d9488]">25+</p>
+              <p className="text-[10px] sm:text-xs font-semibold text-slate-600 mt-0.5">Bác sĩ chuyên khoa</p>
             </div>
             <div>
-              <p className="text-2xl sm:text-3xl font-extrabold text-[#0d9488]">99.4%</p>
-              <p className="text-xs sm:text-sm font-semibold text-slate-600 mt-0.5">Hài lòng dịch vụ</p>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#0d9488]">99.4%</p>
+              <p className="text-[10px] sm:text-xs font-semibold text-slate-600 mt-0.5">Hài lòng dịch vụ</p>
             </div>
           </div>
         </div>
@@ -240,21 +247,24 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
             <div>
               <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold bg-sky-800 text-white mb-2 shadow-xs">
-                <Stethoscope className="w-3.5 h-3.5" /> Đội Ngũ Y Bác Sĩ
+                <Stethoscope className="w-3.5 h-3.5" /> Bác Sĩ Tiêu Biểu & Giàu Kinh Nghiệm
               </div>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-                Bác Sĩ Giỏi & Tận Tâm
+                Đội Ngũ Chuyên Gia Đầu Ngành
               </h2>
+              <p className="text-xs sm:text-sm text-slate-600 mt-1">
+                Các Bác sĩ Chuyên khoa I, II và Tiến sĩ y khoa với trên 10–20 năm kinh nghiệm điều trị.
+              </p>
             </div>
             <Link href="/book">
               <Button variant="outline" size="sm" className="bg-white hover:bg-sky-50 border-sky-300 font-bold text-sky-800">
-                Xem Lịch Khám Bác Sĩ
+                Xem Lịch Khám & Đặt Hẹn ({doctors.length} Bác Sĩ)
               </Button>
             </Link>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {doctors.map((doc) => (
+            {featuredDoctors.map((doc) => (
               <div
                 key={doc.id}
                 className="bg-white rounded-2xl border-2 border-sky-200/90 shadow-md hover:border-sky-500 hover:shadow-2xl hover:shadow-sky-900/10 hover:-translate-y-1 transition-all duration-200 overflow-hidden flex flex-col justify-between"

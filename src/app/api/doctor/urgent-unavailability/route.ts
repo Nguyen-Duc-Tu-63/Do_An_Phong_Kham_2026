@@ -25,18 +25,36 @@ export async function POST(request: Request) {
 
     const todayStr = new Date().toISOString().split('T')[0];
 
-    // Find remaining scheduled/confirmed appointments for today
+    // Find remaining scheduled/confirmed appointments from today onwards
     const remainingAppts = await prisma.appointment.findMany({
       where: {
         doctorId: targetDoctorId,
-        appointmentDate: todayStr,
+        appointmentDate: { gte: todayStr },
         status: { in: ['CONFIRMED', 'PENDING'] },
+      },
+      include: {
+        patient: true,
+        specialty: true,
       },
     });
 
+    const adminUsers = await prisma.user.findMany({ where: { role: 'ADMIN' } });
+
     if (remainingAppts.length === 0) {
+      // Create a general notice to Admin even if no appointments are affected
+      for (const admin of adminUsers) {
+        await prisma.notification.create({
+          data: {
+            userId: admin.id,
+            message: `THÔNG BÁO: ${doctorInfo.user.fullName} vừa báo bận đột xuất (Lý do: "${reason || 'Bận việc khẩn'}"). Bác sĩ hiện không có ca khám nào sắp tới.`,
+            type: 'URGENT_DOCTOR_BUSY',
+          },
+        });
+      }
+
       return NextResponse.json({
-        message: 'No active appointments remaining for today to flag.',
+        success: true,
+        message: `Đã ghi nhận báo bận của Bác sĩ tới ban Quản lý. Bác sĩ hiện không có ca khám nào đang chờ điều phối.`,
         affectedCount: 0,
       });
     }
@@ -52,14 +70,13 @@ export async function POST(request: Request) {
     });
 
     // Create notifications for Admins
-    const adminUsers = await prisma.user.findMany({ where: { role: 'ADMIN' } });
     for (const admin of adminUsers) {
       for (const appt of remainingAppts) {
         await prisma.notification.create({
           data: {
             userId: admin.id,
             appointmentId: appt.id,
-            message: `URGENT: ${doctorInfo.user.fullName} reported sudden unavailability ("${reason}"). Appointment at ${appt.appointmentTime} needs reassignment!`,
+            message: `KHẨN CẤP: ${doctorInfo.user.fullName} báo bận đột xuất ("${reason || 'Việc khẩn'}"). Ca khám bệnh nhân ${appt.patient?.fullName || ''} lúc ${appt.appointmentTime} ngày ${appt.appointmentDate} cần đổi bác sĩ ngay!`,
             type: 'URGENT_DOCTOR_BUSY',
           },
         });
@@ -68,7 +85,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: `Successfully reported unavailability. ${remainingAppts.length} appointments flagged for urgent reassignment.`,
+      message: `Đã kích hoạt báo bận thành công! Có ${remainingAppts.length} ca khám đã được chuyển sang Lễ tân / Quản lý để điều phối bác sĩ thay thế.`,
       affectedCount: remainingAppts.length,
     });
   } catch (error: any) {

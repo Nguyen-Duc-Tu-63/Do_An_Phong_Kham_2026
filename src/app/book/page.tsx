@@ -270,15 +270,15 @@ function BookingFormContent() {
       </div>
 
       {/* STEP INDICATOR */}
-      <div className="flex items-center justify-between border-b border-slate-200 pb-4 max-w-2xl mx-auto">
+      <div className="flex items-center justify-between border-b border-slate-200 pb-4 max-w-2xl mx-auto gap-2">
         {[
-          { num: 1, label: '1. Chọn Khoa & Bác Sĩ' },
-          { num: 2, label: '2. Chọn Ngày & Giờ' },
-          { num: 3, label: '3. Thông Tin & Xác Nhận' },
+          { num: 1, label: '1. Chọn Khoa & Bác Sĩ', short: '1. Bác Sĩ' },
+          { num: 2, label: '2. Chọn Ngày & Giờ', short: '2. Thời Gian' },
+          { num: 3, label: '3. Thông Tin & Xác Nhận', short: '3. Xác Nhận' },
         ].map((s) => (
-          <div key={s.num} className="flex items-center gap-2">
+          <div key={s.num} className="flex items-center gap-1.5 sm:gap-2">
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors shrink-0 ${
                 step === s.num
                   ? 'bg-[#4fc3a1] text-white ring-4 ring-emerald-100'
                   : step > s.num
@@ -286,14 +286,15 @@ function BookingFormContent() {
                   : 'bg-slate-100 text-slate-400'
               }`}
             >
-              {step > s.num ? <CheckCircle2 className="w-5 h-5" /> : s.num}
+              {step > s.num ? <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" /> : s.num}
             </div>
             <span
-              className={`text-xs font-semibold hidden sm:inline ${
+              className={`text-xs font-semibold ${
                 step === s.num ? 'text-slate-900 font-bold' : 'text-slate-400'
               }`}
             >
-              {s.label}
+              <span className="hidden sm:inline">{s.label}</span>
+              <span className="inline sm:hidden">{s.short}</span>
             </span>
           </div>
         ))}
@@ -829,17 +830,17 @@ function BookingFormContent() {
           )}
 
           {/* NÚT CHUYỂN BƯỚC */}
-          <div className="flex items-center justify-between pt-6 border-t border-slate-100">
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-6 border-t border-slate-100">
             {step > 1 ? (
-              <Button key="prev-step-btn" type="button" variant="outline" onClick={handlePrevStep}>
+              <Button key="prev-step-btn" type="button" variant="outline" onClick={handlePrevStep} className="w-full sm:w-auto">
                 <ChevronLeft className="w-4 h-4 mr-1" /> Quay Lại
               </Button>
             ) : (
-              <div />
+              <div className="hidden sm:block" />
             )}
 
             {step < 3 ? (
-              <Button key="next-step-btn" type="button" onClick={handleNextStep}>
+              <Button key="next-step-btn" type="button" onClick={handleNextStep} className="w-full sm:w-auto">
                 Tiếp Theo <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             ) : (
@@ -848,7 +849,7 @@ function BookingFormContent() {
                 type="submit"
                 isLoading={isSubmitting}
                 size="lg"
-                className="px-8 shadow-lg bg-[#10b981] hover:bg-emerald-600 font-bold"
+                className="w-full sm:w-auto px-8 shadow-lg bg-[#10b981] hover:bg-emerald-600 font-bold"
               >
                 <CheckCircle2 className="w-4 h-4 mr-1.5" /> Xác Nhận Đặt Lịch Khám
               </Button>

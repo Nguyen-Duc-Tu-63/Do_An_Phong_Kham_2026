@@ -45,18 +45,18 @@ export function Dialog({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto bg-slate-900/50 backdrop-blur-sm transition-opacity">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto bg-slate-900/60 backdrop-blur-sm transition-opacity">
       <div
         className={cn(
-          'relative w-full bg-white rounded-2xl shadow-2xl p-6 border border-slate-100 animate-in fade-in zoom-in-95 duration-150',
+          'relative w-full max-h-[92vh] overflow-y-auto bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-6 border border-slate-100 animate-in fade-in zoom-in-95 duration-150',
           widthClasses[maxWidth]
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between pb-4 border-b border-slate-100 mb-4">
-          <div>
-            <h3 className="text-xl font-bold text-slate-800">{title}</h3>
-            {description && <p className="text-xs text-slate-500 mt-1">{description}</p>}
+        <div className="flex items-start justify-between pb-3 sm:pb-4 border-b border-slate-100 mb-3 sm:mb-4">
+          <div className="pr-4">
+            <h3 className="text-lg sm:text-xl font-bold text-slate-800">{title}</h3>
+            {description && <p className="text-xs text-slate-500 mt-0.5 sm:mt-1">{description}</p>}
           </div>
           <button
             onClick={onClose}

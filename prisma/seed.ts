@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Bắt đầu tạo dữ liệu mẫu Tiếng Việt...');
+  console.log('🌱 Bắt đầu tạo dữ liệu mẫu Tiếng Việt chuẩn 10 Chuyên Khoa (mỗi khoa 3 Bác Sĩ)...');
 
   // Clean existing tables
   await prisma.prescription.deleteMany();
@@ -41,7 +41,7 @@ async function main() {
     },
   });
 
-  // 2. Các Chuyên Khoa
+  // 2. Các Chuyên Khoa (10 Chuyên Khoa Toàn Diện)
   const cardio = await prisma.specialty.create({
     data: {
       name: 'Khoa Tim Mạch',
@@ -122,291 +122,391 @@ async function main() {
     },
   });
 
-  // 3. Đội Ngũ Bác Sĩ
-  const doc1User = await prisma.user.create({
-    data: {
+  // 3. Danh Sách 30 Bác Sĩ Chuyên Khoa (3 Bác Sĩ Mỗi Khoa)
+  const doctorsData = [
+    // --- KHOA TIM MẠCH (3 Bác Sĩ) ---
+    {
       fullName: 'BS CKI. Lê Thị Thanh Hà',
       email: 'doctor1@clinic.com',
       phone: '0912345601',
-      passwordHash: defaultPasswordHash,
-      role: 'DOCTOR',
       avatarUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=250&q=80',
-    },
-  });
-
-  const doc1Info = await prisma.doctorInfo.create({
-    data: {
-      userId: doc1User.id,
       specialtyId: cardio.id,
       degree: 'Bác sĩ CKI. Tim Mạch Học',
       experienceYears: 14,
       bio: 'Bác sĩ giàu kinh nghiệm trong tầm soát tăng huyết áp, rối loạn nhịp tim và bệnh mạch vành.',
       consultationFee: 45.0,
     },
-  });
-
-  const doc2User = await prisma.user.create({
-    data: {
-      fullName: 'ThS BS. Nguyễn Minh Triết',
-      email: 'doctor2@clinic.com',
-      phone: '0912345602',
-      passwordHash: defaultPasswordHash,
-      role: 'DOCTOR',
-      avatarUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=250&q=80',
-    },
-  });
-
-  const doc2Info = await prisma.doctorInfo.create({
-    data: {
-      userId: doc2User.id,
-      specialtyId: peds.id,
-      degree: 'Thạc sĩ Bác sĩ Nhi Khoa',
-      experienceYears: 10,
-      bio: 'Bác sĩ Nhi khoa tận tâm, nhẹ nhàng với trẻ em, tư vấn phát triển chiều cao và dinh dưỡng cho bé.',
-      consultationFee: 35.0,
-    },
-  });
-
-  const doc3User = await prisma.user.create({
-    data: {
-      fullName: 'BS. Trần Hoàng Yến',
-      email: 'doctor3@clinic.com',
-      phone: '0912345603',
-      passwordHash: defaultPasswordHash,
-      role: 'DOCTOR',
-      avatarUrl: 'https://images.unsplash.com/photo-1594824813566-88855ce7890b?auto=format&fit=crop&w=250&q=80',
-    },
-  });
-
-  const doc3Info = await prisma.doctorInfo.create({
-    data: {
-      userId: doc3User.id,
-      specialtyId: derma.id,
-      degree: 'Bác sĩ Chuyên Khoa Da Liễu',
-      experienceYears: 8,
-      bio: 'Chuyên gia điều trị viêm da cơ địa, dị ứng thời tiết, trị mụn và phục hồi da nhạy cảm.',
-      consultationFee: 40.0,
-    },
-  });
-
-  const doc4User = await prisma.user.create({
-    data: {
-      fullName: 'ThS BS. Phạm Quốc Bảo',
-      email: 'doctor4@clinic.com',
-      phone: '0912345604',
-      passwordHash: defaultPasswordHash,
-      role: 'DOCTOR',
-      avatarUrl: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=250&q=80',
-    },
-  });
-
-  const doc4Info = await prisma.doctorInfo.create({
-    data: {
-      userId: doc4User.id,
-      specialtyId: internal.id,
-      degree: 'Thạc sĩ Bác sĩ Nội Khoa',
-      experienceYears: 12,
-      bio: 'Tư vấn tầm soát sức khỏe tổng quát, điều trị bệnh lý dạ dày, đái tháo đường và rối loạn mỡ máu.',
-      consultationFee: 30.0,
-    },
-  });
-
-  const doc5User = await prisma.user.create({
-    data: {
-      fullName: 'BS CKII. Võ Minh Hoàng',
-      email: 'doctor5@clinic.com',
-      phone: '0912345605',
-      passwordHash: defaultPasswordHash,
-      role: 'DOCTOR',
-      avatarUrl: 'https://images.unsplash.com/photo-1622902046580-2b47f47f5471?auto=format&fit=crop&w=250&q=80',
-    },
-  });
-
-  const doc5Info = await prisma.doctorInfo.create({
-    data: {
-      userId: doc5User.id,
-      specialtyId: ent.id,
-      degree: 'Bác sĩ CKII. Tai Mũi Họng',
-      experienceYears: 16,
-      bio: 'Chuyên gia đầu ngành về điều trị viêm xoang mạn tính, polyp mũi xoang và phẫu thuật nội soi Tai Mũi Họng.',
-      consultationFee: 40.0,
-    },
-  });
-
-  const doc6User = await prisma.user.create({
-    data: {
-      fullName: 'ThS BS. Đặng Ngọc Anh',
-      email: 'doctor6@clinic.com',
-      phone: '0912345606',
-      passwordHash: defaultPasswordHash,
-      role: 'DOCTOR',
-      avatarUrl: 'https://images.unsplash.com/photo-1594824813566-88855ce7890b?auto=format&fit=crop&w=250&q=80',
-    },
-  });
-
-  const doc6Info = await prisma.doctorInfo.create({
-    data: {
-      userId: doc6User.id,
-      specialtyId: eye.id,
-      degree: 'Thạc sĩ Bác sĩ Nhãn Khoa',
-      experienceYears: 11,
-      bio: 'Bác sĩ chuyên sâu về tật khúc xạ học đường, kiểm soát cận thị tiến triển ở trẻ em và điều trị khô mắt.',
-      consultationFee: 35.0,
-    },
-  });
-
-  const doc7User = await prisma.user.create({
-    data: {
-      fullName: 'BS CKI. Bùi Tuấn Kiệt',
-      email: 'doctor7@clinic.com',
-      phone: '0912345607',
-      passwordHash: defaultPasswordHash,
-      role: 'DOCTOR',
-      avatarUrl: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=250&q=80',
-    },
-  });
-
-  const doc7Info = await prisma.doctorInfo.create({
-    data: {
-      userId: doc7User.id,
-      specialtyId: dental.id,
-      degree: 'Bác sĩ CKI. Răng Hàm Mặt & Chỉnh Nha',
-      experienceYears: 9,
-      bio: 'Bác sĩ nha khoa thẩm mỹ tận tâm, chuyên sâu về cấy ghép Implant, chỉnh nha niềng răng và phục hình nụ cười.',
-      consultationFee: 30.0,
-    },
-  });
-
-  const doc8User = await prisma.user.create({
-    data: {
-      fullName: 'TS BS. Hoàng Đức Thắng',
-      email: 'doctor8@clinic.com',
-      phone: '0912345608',
-      passwordHash: defaultPasswordHash,
-      role: 'DOCTOR',
-      avatarUrl: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=250&q=80',
-    },
-  });
-
-  const doc8Info = await prisma.doctorInfo.create({
-    data: {
-      userId: doc8User.id,
-      specialtyId: ortho.id,
-      degree: 'Tiến sĩ Bác sĩ Cơ Xương Khớp',
-      experienceYears: 18,
-      bio: 'Bác sĩ giàu kinh nghiệm trong chẩn đoán thoái hóa khớp gối, loãng xương, tiêm huyết tương giàu tiểu cầu (PRP).',
-      consultationFee: 50.0,
-    },
-  });
-
-  const doc9User = await prisma.user.create({
-    data: {
-      fullName: 'BS CKI. Vũ Thùy Linh',
-      email: 'doctor9@clinic.com',
-      phone: '0912345609',
-      passwordHash: defaultPasswordHash,
-      role: 'DOCTOR',
-      avatarUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=250&q=80',
-    },
-  });
-
-  const doc9Info = await prisma.doctorInfo.create({
-    data: {
-      userId: doc9User.id,
-      specialtyId: obgyn.id,
-      degree: 'Bác sĩ CKI. Sản Phụ Khoa',
-      experienceYears: 12,
-      bio: 'Bác sĩ phụ khoa nhẹ nhàng, thấu hiểu tâm lý phụ nữ, chuyên theo dõi thai kỳ nguy cơ cao và tư vấn tiền sản.',
-      consultationFee: 45.0,
-    },
-  });
-
-  const doc10User = await prisma.user.create({
-    data: {
-      fullName: 'ThS BS. Trương Gia Bảo',
-      email: 'doctor10@clinic.com',
-      phone: '0912345610',
-      passwordHash: defaultPasswordHash,
-      role: 'DOCTOR',
-      avatarUrl: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=250&q=80',
-    },
-  });
-
-  const doc10Info = await prisma.doctorInfo.create({
-    data: {
-      userId: doc10User.id,
-      specialtyId: gastro.id,
-      degree: 'Thạc sĩ Bác sĩ Tiêu Hóa & Nội Soi',
-      experienceYears: 13,
-      bio: 'Chuyên gia điều trị hội chứng ruột kích thích (IBS), trào ngược GERD, viêm gan siêu vi B/C và gan nhiễm mỡ.',
-      consultationFee: 40.0,
-    },
-  });
-
-  const doc11User = await prisma.user.create({
-    data: {
+    {
       fullName: 'BS CKI. Phan Thị Kim Ngân',
       email: 'doctor11@clinic.com',
       phone: '0912345611',
-      passwordHash: defaultPasswordHash,
-      role: 'DOCTOR',
       avatarUrl: 'https://images.unsplash.com/photo-1527613426441-4da17471b66d?auto=format&fit=crop&w=250&q=80',
-    },
-  });
-
-  const doc11Info = await prisma.doctorInfo.create({
-    data: {
-      userId: doc11User.id,
       specialtyId: cardio.id,
       degree: 'Bác sĩ CKI. Tim Mạch & Can Thiệp',
       experienceYears: 11,
       bio: 'Tư vấn điều trị rối loạn mỡ máu, xơ vữa động mạch và theo dõi sức khỏe tim mạch người cao tuổi.',
       consultationFee: 40.0,
     },
-  });
+    {
+      fullName: 'BS CKII. Nguyễn Hoàng Nam',
+      email: 'doctor13@clinic.com',
+      phone: '0912345613',
+      avatarUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=250&q=80',
+      specialtyId: cardio.id,
+      degree: 'Bác sĩ CKII. Tim Mạch Lâm Sàng',
+      experienceYears: 17,
+      bio: 'Chuyên gia đầu ngành về điều trị tăng huyết áp kháng trị, suy tim và bệnh lý van tim.',
+      consultationFee: 50.0,
+    },
 
-  const doc12User = await prisma.user.create({
-    data: {
+    // --- KHOA NHI (3 Bác Sĩ) ---
+    {
+      fullName: 'ThS BS. Nguyễn Minh Triết',
+      email: 'doctor2@clinic.com',
+      phone: '0912345602',
+      avatarUrl: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=250&q=80',
+      specialtyId: peds.id,
+      degree: 'Thạc sĩ Bác sĩ Nhi Khoa',
+      experienceYears: 10,
+      bio: 'Bác sĩ Nhi khoa tận tâm, nhẹ nhàng với trẻ em, tư vấn phát triển chiều cao và dinh dưỡng cho bé.',
+      consultationFee: 35.0,
+    },
+    {
       fullName: 'ThS BS. Đoàn Nhật Huy',
       email: 'doctor12@clinic.com',
       phone: '0912345612',
-      passwordHash: defaultPasswordHash,
-      role: 'DOCTOR',
       avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
-    },
-  });
-
-  const doc12Info = await prisma.doctorInfo.create({
-    data: {
-      userId: doc12User.id,
       specialtyId: peds.id,
       degree: 'Thạc sĩ Bác sĩ Nhi - Hô Hấp',
       experienceYears: 9,
-      bio: 'Chuyên khám và điều trị viêm phế quản, hen suyễn trẻ em, tư vấn tiêm chủng và tăng cường miễn dịch cho bé.',
+      bio: 'Chuyên khám và điều trị viêm phế quản, hen suyễn trẻ em, tư vấn tiêm chủng và tăng cường miễn dịch.',
       consultationFee: 35.0,
     },
-  });
+    {
+      fullName: 'BS CKI. Đỗ Thị Thu Trang',
+      email: 'doctor14@clinic.com',
+      phone: '0912345614',
+      avatarUrl: 'https://images.unsplash.com/photo-1594824813566-88855ce7890b?auto=format&fit=crop&w=250&q=80',
+      specialtyId: peds.id,
+      degree: 'Bác sĩ CKI. Nhi Sơ Sinh & Dinh Dưỡng',
+      experienceYears: 12,
+      bio: 'Chuyên gia tư vấn phát triển thể chất, chứng biếng ăn, rối loạn tiêu hóa và theo dõi sức khỏe trẻ sơ sinh.',
+      consultationFee: 40.0,
+    },
 
-  // 4. Khung Giờ Làm Việc Bác Sĩ (Tất cả các ngày trong tuần: Thứ 2 - Chủ Nhật)
-  const doctorInfos = [
-    doc1Info,
-    doc2Info,
-    doc3Info,
-    doc4Info,
-    doc5Info,
-    doc6Info,
-    doc7Info,
-    doc8Info,
-    doc9Info,
-    doc10Info,
-    doc11Info,
-    doc12Info,
+    // --- KHOA DA LIỄU (3 Bác Sĩ) ---
+    {
+      fullName: 'BS. Trần Hoàng Yến',
+      email: 'doctor3@clinic.com',
+      phone: '0912345603',
+      avatarUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=250&q=80',
+      specialtyId: derma.id,
+      degree: 'Bác sĩ Chuyên Khoa Da Liễu',
+      experienceYears: 8,
+      bio: 'Chuyên gia điều trị viêm da cơ địa, dị ứng thời tiết, trị mụn và phục hồi da nhạy cảm.',
+      consultationFee: 40.0,
+    },
+    {
+      fullName: 'ThS BS. Trần Tuấn Anh',
+      email: 'doctor15@clinic.com',
+      phone: '0912345615',
+      avatarUrl: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=250&q=80',
+      specialtyId: derma.id,
+      degree: 'Thạc sĩ Bác sĩ Da Liễu & Thẩm Mỹ Da',
+      experienceYears: 11,
+      bio: 'Chuyên sâu điều trị sẹo rỗ, nám sạm, viêm da tiếp xúc và ứng dụng Laser thẩm mỹ y khoa.',
+      consultationFee: 45.0,
+    },
+    {
+      fullName: 'BS CKI. Lê Mai Phương',
+      email: 'doctor16@clinic.com',
+      phone: '0912345616',
+      avatarUrl: 'https://images.unsplash.com/photo-1527613426441-4da17471b66d?auto=format&fit=crop&w=250&q=80',
+      specialtyId: derma.id,
+      degree: 'Bác sĩ CKI. Da Liễu Học',
+      experienceYears: 13,
+      bio: 'Khám và điều trị vảy nến, chàm mạn tính, mụn nội tiết và chăm sóc phục hồi hàng rào bảo vệ da.',
+      consultationFee: 40.0,
+    },
+
+    // --- KHOA NỘI TỔNG QUÁT (3 Bác Sĩ) ---
+    {
+      fullName: 'ThS BS. Phạm Quốc Bảo',
+      email: 'doctor4@clinic.com',
+      phone: '0912345604',
+      avatarUrl: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=250&q=80',
+      specialtyId: internal.id,
+      degree: 'Thạc sĩ Bác sĩ Nội Khoa',
+      experienceYears: 12,
+      bio: 'Tư vấn tầm soát sức khỏe tổng quát, điều trị bệnh lý dạ dày, đái tháo đường và rối loạn mỡ máu.',
+      consultationFee: 30.0,
+    },
+    {
+      fullName: 'BS CKII. Đặng Hữu Phúc',
+      email: 'doctor17@clinic.com',
+      phone: '0912345617',
+      avatarUrl: 'https://images.unsplash.com/photo-1622902046580-2b47f47f5471?auto=format&fit=crop&w=250&q=80',
+      specialtyId: internal.id,
+      degree: 'Bác sĩ CKII. Nội Tổng Quát',
+      experienceYears: 19,
+      bio: 'Chuyên gia đầu ngành về quản lý bệnh đái tháo đường tuýp 2, rối loạn chuyển hóa và hội chứng chuyển hóa.',
+      consultationFee: 45.0,
+    },
+    {
+      fullName: 'ThS BS. Nguyễn Bích Ngọc',
+      email: 'doctor18@clinic.com',
+      phone: '0912345618',
+      avatarUrl: 'https://images.unsplash.com/photo-1594824813566-88855ce7890b?auto=format&fit=crop&w=250&q=80',
+      specialtyId: internal.id,
+      degree: 'Thạc sĩ Bác sĩ Nội Tiết & Dinh Dưỡng',
+      experienceYears: 10,
+      bio: 'Tư vấn tầm soát sức khỏe người cao tuổi, điều trị bệnh tuyến giáp và rối loạn mỡ máu mạn tính.',
+      consultationFee: 35.0,
+    },
+
+    // --- KHOA TAI MŨI HỌNG (3 Bác Sĩ) ---
+    {
+      fullName: 'BS CKII. Võ Minh Hoàng',
+      email: 'doctor5@clinic.com',
+      phone: '0912345605',
+      avatarUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=250&q=80',
+      specialtyId: ent.id,
+      degree: 'Bác sĩ CKII. Tai Mũi Họng',
+      experienceYears: 16,
+      bio: 'Chuyên gia đầu ngành về điều trị viêm xoang mạn tính, polyp mũi xoang và phẫu thuật nội soi Tai Mũi Họng.',
+      consultationFee: 40.0,
+    },
+    {
+      fullName: 'ThS BS. Hoàng Minh Quân',
+      email: 'doctor19@clinic.com',
+      phone: '0912345619',
+      avatarUrl: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=250&q=80',
+      specialtyId: ent.id,
+      degree: 'Thạc sĩ Bác sĩ Tai Mũi Họng',
+      experienceYears: 12,
+      bio: 'Chuyên điều trị viêm xoang dị ứng, viêm thanh quản hạt xơ dây thanh, ù tai và suy giảm thính lực.',
+      consultationFee: 35.0,
+    },
+    {
+      fullName: 'BS CKI. Lê Thị Hải Yến',
+      email: 'doctor20@clinic.com',
+      phone: '0912345620',
+      avatarUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=250&q=80',
+      specialtyId: ent.id,
+      degree: 'Bác sĩ CKI. Tai Mũi Họng Nhi',
+      experienceYears: 10,
+      bio: 'Chuyên sâu về nạo VA, điều trị viêm amidan bằng công nghệ không đau và viêm tai giữa ứ dịch ở trẻ em.',
+      consultationFee: 35.0,
+    },
+
+    // --- KHOA MẮT (NHÃN KHOA) (3 Bác Sĩ) ---
+    {
+      fullName: 'ThS BS. Đặng Ngọc Anh',
+      email: 'doctor6@clinic.com',
+      phone: '0912345606',
+      avatarUrl: 'https://images.unsplash.com/photo-1594824813566-88855ce7890b?auto=format&fit=crop&w=250&q=80',
+      specialtyId: eye.id,
+      degree: 'Thạc sĩ Bác sĩ Nhãn Khoa',
+      experienceYears: 11,
+      bio: 'Bác sĩ chuyên sâu về tật khúc xạ học đường, kiểm soát cận thị tiến triển ở trẻ em và điều trị khô mắt.',
+      consultationFee: 35.0,
+    },
+    {
+      fullName: 'BS CKII. Vũ Đình Trọng',
+      email: 'doctor21@clinic.com',
+      phone: '0912345621',
+      avatarUrl: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=250&q=80',
+      specialtyId: eye.id,
+      degree: 'Bác sĩ CKII. Nhãn Khoa',
+      experienceYears: 18,
+      bio: 'Chuyên gia phẫu thuật Phaco đục thủy tinh thể, Glaucoma (cườm nước) và bệnh võng mạc tiểu đường.',
+      consultationFee: 50.0,
+    },
+    {
+      fullName: 'ThS BS. Phan Thảo My',
+      email: 'doctor22@clinic.com',
+      phone: '0912345622',
+      avatarUrl: 'https://images.unsplash.com/photo-1527613426441-4da17471b66d?auto=format&fit=crop&w=250&q=80',
+      specialtyId: eye.id,
+      degree: 'Thạc sĩ Bác sĩ Nhãn Khoa Trẻ Em',
+      experienceYears: 9,
+      bio: 'Chuyên khám tật khúc xạ, kiểm soát tiến triển cận thị bằng kính Ortho-K và luyện tập thị giác nhược thị.',
+      consultationFee: 35.0,
+    },
+
+    // --- KHOA RĂNG HÀM MẶT (3 Bác Sĩ) ---
+    {
+      fullName: 'BS CKI. Bùi Tuấn Kiệt',
+      email: 'doctor7@clinic.com',
+      phone: '0912345607',
+      avatarUrl: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=250&q=80',
+      specialtyId: dental.id,
+      degree: 'Bác sĩ CKI. Răng Hàm Mặt & Chỉnh Nha',
+      experienceYears: 9,
+      bio: 'Bác sĩ nha khoa thẩm mỹ tận tâm, chuyên sâu về cấy ghép Implant, chỉnh nha niềng răng và phục hình nụ cười.',
+      consultationFee: 30.0,
+    },
+    {
+      fullName: 'ThS BS. Nguyễn Thành Long',
+      email: 'doctor23@clinic.com',
+      phone: '0912345623',
+      avatarUrl: 'https://images.unsplash.com/photo-1622902046580-2b47f47f5471?auto=format&fit=crop&w=250&q=80',
+      specialtyId: dental.id,
+      degree: 'Thạc sĩ Bác sĩ Chỉnh Nha & Răng Trẻ Em',
+      experienceYears: 11,
+      bio: 'Chuyên sâu niềng răng trong suốt Invisalign, điều trị khớp cắn ngược và chỉnh hình răng mặt cho trẻ em.',
+      consultationFee: 35.0,
+    },
+    {
+      fullName: 'BS CKI. Phạm Minh Châu',
+      email: 'doctor24@clinic.com',
+      phone: '0912345624',
+      avatarUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=250&q=80',
+      specialtyId: dental.id,
+      degree: 'Bác sĩ CKI. Cấy Ghép Implant & Phục Hình',
+      experienceYears: 13,
+      bio: 'Chuyên cấy ghép Implant kỹ thuật số không đau, dán sứ Veneer thẩm mỹ và tiểu phẫu răng khôn mọc lệch.',
+      consultationFee: 40.0,
+    },
+
+    // --- KHOA CƠ XƯƠNG KHỚP (3 Bác Sĩ) ---
+    {
+      fullName: 'TS BS. Hoàng Đức Thắng',
+      email: 'doctor8@clinic.com',
+      phone: '0912345608',
+      avatarUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=250&q=80',
+      specialtyId: ortho.id,
+      degree: 'Tiến sĩ Bác sĩ Cơ Xương Khớp',
+      experienceYears: 18,
+      bio: 'Bác sĩ giàu kinh nghiệm trong chẩn đoán thoái hóa khớp gối, loãng xương, tiêm huyết tương giàu tiểu cầu (PRP).',
+      consultationFee: 50.0,
+    },
+    {
+      fullName: 'BS CKII. Bùi Quang Huy',
+      email: 'doctor25@clinic.com',
+      phone: '0912345625',
+      avatarUrl: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=250&q=80',
+      specialtyId: ortho.id,
+      degree: 'Bác sĩ CKII. Chấn Thương Chỉnh Hình',
+      experienceYears: 16,
+      bio: 'Điều trị thoái hóa cột sống cổ - thắt lưng, tổn thương sụn chêm, rách dây chằng và nắn chỉnh cơ xương khớp.',
+      consultationFee: 45.0,
+    },
+    {
+      fullName: 'ThS BS. Trần Thị Ánh Tuyết',
+      email: 'doctor26@clinic.com',
+      phone: '0912345626',
+      avatarUrl: 'https://images.unsplash.com/photo-1594824813566-88855ce7890b?auto=format&fit=crop&w=250&q=80',
+      specialtyId: ortho.id,
+      degree: 'Thạc sĩ Bác sĩ Thấp Khớp Học',
+      experienceYears: 10,
+      bio: 'Chuyên sâu điều trị viêm khớp dạng thấp, viêm cột sống dính khớp, loãng xương và cơn Gút cấp mạn tính.',
+      consultationFee: 35.0,
+    },
+
+    // --- KHOA SẢN PHỤ KHOA (3 Bác Sĩ) ---
+    {
+      fullName: 'BS CKI. Vũ Thùy Linh',
+      email: 'doctor9@clinic.com',
+      phone: '0912345609',
+      avatarUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=250&q=80',
+      specialtyId: obgyn.id,
+      degree: 'Bác sĩ CKI. Sản Phụ Khoa',
+      experienceYears: 12,
+      bio: 'Bác sĩ phụ khoa nhẹ nhàng, thấu hiểu tâm lý phụ nữ, chuyên theo dõi thai kỳ nguy cơ cao và tư vấn tiền sản.',
+      consultationFee: 45.0,
+    },
+    {
+      fullName: 'BS CKII. Đặng Thanh Nga',
+      email: 'doctor27@clinic.com',
+      phone: '0912345627',
+      avatarUrl: 'https://images.unsplash.com/photo-1527613426441-4da17471b66d?auto=format&fit=crop&w=250&q=80',
+      specialtyId: obgyn.id,
+      degree: 'Bác sĩ CKII. Sản Phụ Khoa',
+      experienceYears: 17,
+      bio: 'Chuyên gia siêu âm dị tật thai nhi 4D/5D, quản lý thai kỳ nguy cơ cao và tư vấn hỗ trợ sinh sản.',
+      consultationFee: 50.0,
+    },
+    {
+      fullName: 'ThS BS. Lê Hồng Hạnh',
+      email: 'doctor28@clinic.com',
+      phone: '0912345628',
+      avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=250&q=80',
+      specialtyId: obgyn.id,
+      degree: 'Thạc sĩ Bác sĩ Phụ Khoa & Nội Tiết Sinh Sản',
+      experienceYears: 11,
+      bio: 'Tư vấn sức khỏe tiền hôn nhân, điều trị u xơ tử cung, u nang buồng trứng và tầm soát ung thư cổ tử cung.',
+      consultationFee: 40.0,
+    },
+
+    // --- KHOA TIÊU HÓA - GAN MẬT (3 Bác Sĩ) ---
+    {
+      fullName: 'ThS BS. Trương Gia Bảo',
+      email: 'doctor10@clinic.com',
+      phone: '0912345610',
+      avatarUrl: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=250&q=80',
+      specialtyId: gastro.id,
+      degree: 'Thạc sĩ Bác sĩ Tiêu Hóa & Nội Soi',
+      experienceYears: 13,
+      bio: 'Chuyên gia điều trị hội chứng ruột kích thích (IBS), trào ngược GERD, viêm gan siêu vi B/C và gan nhiễm mỡ.',
+      consultationFee: 40.0,
+    },
+    {
+      fullName: 'BS CKII. Ngô Văn Dũng',
+      email: 'doctor29@clinic.com',
+      phone: '0912345629',
+      avatarUrl: 'https://images.unsplash.com/photo-1622902046580-2b47f47f5471?auto=format&fit=crop&w=250&q=80',
+      specialtyId: gastro.id,
+      degree: 'Bác sĩ CKII. Gan Mật Tụy',
+      experienceYears: 18,
+      bio: 'Chuyên gia điều trị viêm gan B, C mạn tính, xơ gan giai đoạn sớm, sỏi đường mật và bệnh lý tụy.',
+      consultationFee: 50.0,
+    },
+    {
+      fullName: 'ThS BS. Hoàng Thị Diệu Linh',
+      email: 'doctor30@clinic.com',
+      phone: '0912345630',
+      avatarUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=250&q=80',
+      specialtyId: gastro.id,
+      degree: 'Thạc sĩ Bác sĩ Nội Soi Tiêu Hóa',
+      experienceYears: 10,
+      bio: 'Nội soi dạ dày đại tràng không đau, can thiệp cắt polyp ống tiêu hóa và điều trị vi khuẩn HP kháng thuốc.',
+      consultationFee: 40.0,
+    },
   ];
-  for (const doc of doctorInfos) {
+
+  const createdDoctorInfos: any[] = [];
+
+  for (const docData of doctorsData) {
+    const user = await prisma.user.create({
+      data: {
+        fullName: docData.fullName,
+        email: docData.email,
+        phone: docData.phone,
+        passwordHash: defaultPasswordHash,
+        role: 'DOCTOR',
+        avatarUrl: docData.avatarUrl,
+      },
+    });
+
+    const info = await prisma.doctorInfo.create({
+      data: {
+        userId: user.id,
+        specialtyId: docData.specialtyId,
+        degree: docData.degree,
+        experienceYears: docData.experienceYears,
+        bio: docData.bio,
+        consultationFee: docData.consultationFee,
+      },
+    });
+
+    createdDoctorInfos.push(info);
+
+    // 4. Lịch làm việc trong tuần (Thứ 2 - Chủ Nhật: 08:00 - 17:00)
     for (let day = 0; day <= 6; day++) {
       await prisma.doctorSchedule.create({
         data: {
-          doctorId: doc.id,
+          doctorId: info.id,
           dayOfWeek: day,
           startTime: '08:00',
           endTime: '17:00',
@@ -455,11 +555,11 @@ async function main() {
   const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
 
   // 6. Lịch Hẹn Mẫu
-  // Lịch 1: Đã hoàn thành khám hôm nay với BS Thanh Hà
+  // Lịch 1: Đã hoàn thành khám hôm nay với BS Lê Thị Thanh Hà (Khoa Tim Mạch)
   const appt1 = await prisma.appointment.create({
     data: {
       patientId: patient1.id,
-      doctorId: doc1Info.id,
+      doctorId: createdDoctorInfos[0].id,
       specialtyId: cardio.id,
       appointmentDate: todayStr,
       appointmentTime: '09:00',
@@ -473,7 +573,7 @@ async function main() {
     data: {
       appointmentId: appt1.id,
       patientId: patient1.id,
-      doctorId: doc1Info.id,
+      doctorId: createdDoctorInfos[0].id,
       symptoms: 'Thỉnh thoảng nhói ngực nhẹ, huyết áp đo tại chỗ 138/88 mmHg.',
       diagnosis: 'Tăng huyết áp nguyên phát độ 1 kèm căng thẳng lao động.',
       notes: 'Giảm ăn mặn, tập thể dục nhẹ nhàng 30 phút mỗi ngày, tái khám sau 4 tuần.',
@@ -501,11 +601,11 @@ async function main() {
     ],
   });
 
-  // Lịch 2: Đã xác nhận hôm nay với ThS BS Nguyễn Minh Triết
+  // Lịch 2: Đã xác nhận hôm nay với ThS BS Nguyễn Minh Triết (Khoa Nhi)
   await prisma.appointment.create({
     data: {
       patientId: patient2.id,
-      doctorId: doc2Info.id,
+      doctorId: createdDoctorInfos[3].id,
       specialtyId: peds.id,
       appointmentDate: todayStr,
       appointmentTime: '10:30',
@@ -515,7 +615,7 @@ async function main() {
     },
   });
 
-  // Lịch 3: Đặt tự động cho ngày mai
+  // Lịch 3: Đặt tự động cho ngày mai (Khoa Da Liễu)
   const appt3 = await prisma.appointment.create({
     data: {
       patientId: patient3.id,
@@ -529,11 +629,11 @@ async function main() {
     },
   });
 
-  // Lịch 4: Đột xuất báo bận cần đổi bác sĩ
+  // Lịch 4: Đột xuất báo bận cần đổi bác sĩ (Khoa Nội Tổng Quát)
   const appt4 = await prisma.appointment.create({
     data: {
       patientId: patient1.id,
-      doctorId: doc4Info.id,
+      doctorId: createdDoctorInfos[9].id,
       specialtyId: internal.id,
       appointmentDate: todayStr,
       appointmentTime: '15:00',
@@ -564,7 +664,7 @@ async function main() {
     },
   });
 
-  console.log('✅ Đã tạo xong dữ liệu mẫu Tiếng Việt thành công!');
+  console.log(`✅ Đã tạo thành công 10 Chuyên Khoa và ${createdDoctorInfos.length} Bác Sĩ phụ trách (mỗi khoa 3 Bác Sĩ đầy đủ lịch làm việc)!`);
 }
 
 main()
