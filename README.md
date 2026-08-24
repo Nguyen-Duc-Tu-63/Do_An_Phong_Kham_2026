@@ -78,35 +78,68 @@ Hệ thống phân quyền 3 vai trò chính dựa trên `Role`:
 ## 📁 Cấu Trúc Mã Nguồn
 
 ```text
-PhongKham2026/
-├── prisma/
-│   ├── schema.prisma      # Khai báo Schema CSDL & quan hệ bảng
-│   └── seed.ts            # Script sinh dữ liệu mẫu ban đầu
+├── public/                # Static assets & Favicons
+│   ├── favicon.ico        # Favicon chuẩn ICO cho trình duyệt
+│   ├── favicon.svg        # Vector SVG favicon chất lượng cao
+│   ├── icon.png           # Icon ứng dụng & Apple touch icon
+│   └── images/            # Hình ảnh tĩnh minh họa
 ├── src/
 │   ├── app/               # Next.js App Router (Pages & API Routes)
 │   │   ├── admin/         # Phân hệ Quản trị viên
 │   │   ├── api/           # Các Backend REST API Routes
 │   │   ├── book/          # Luồng Đặt lịch khám
-│   │   ├── dashboard/     # Trang cá nhân Bệnh nhân
-│   │   ├── doctor/        # Phân hệ Bác sĩ
+│   │   ├── dashboard/     # Trang cá nhân Bệnh nhân (Hồ sơ, Lịch hẹn, Đơn thuốc)
+│   │   ├── doctor/        # Phân hệ Bác sĩ (Bàn làm việc, Khám bệnh, Kê đơn)
 │   │   ├── login/         # Trang Đăng nhập
 │   │   ├── register/      # Trang Đăng ký
 │   │   ├── globals.css    # Stylesheet toàn cục (Tailwind CSS)
-│   │   ├── layout.tsx     # Root Layout
+│   │   ├── layout.tsx     # Root Layout & Cấu hình Metadata Icons
 │   │   └── page.tsx       # Trang chủ hệ thống
 │   ├── components/        # UI Components dùng chung & Layout
-│   │   ├── layout/        # Navbar, Footer, Sidebar
-│   │   └── ui/            # Buttons, Cards, Inputs, Modals
+│   │   ├── layout/        # Navbar, Footer, Sidebar, RoleSwitcherBanner
+│   │   └── ui/            # Buttons, Cards, Inputs, Modals, Badges, Tabs
 │   ├── lib/               # Utility functions, Auth, Prisma Client & Validations
-│   │   ├── auth.ts        # Helper xử lý Session Cookie
+│   │   ├── auth.ts        # Helper xử lý Session Cookie & Phân quyền
 │   │   ├── prisma.ts      # Khởi tạo Singleton Prisma Client
-│   │   ├── utils.ts       # Utility helper functions
+│   │   ├── utils.ts       # Utility helper functions (Formatters, Badge/Status Helpers)
 │   │   └── validations.ts # Zod Schemas
 │   └── types/             # Định nghĩa TypeScript Types / Interfaces
 ├── next.config.mjs        # Cấu hình Next.js
 ├── tailwind.config.ts     # Cấu hình Tailwind CSS
 └── package.json           # Quản lý dependencies & scripts
 ```
+
+---
+
+## 📌 Nhật Ký Nâng Cấp & Hoàn Thiện Tính Năng (Recent Updates)
+
+### 1. Nhận Diện Thương Hiệu & Tích Hợp Bộ Favicon Chuẩn
+* **Khắc phục lỗi `404 favicon.ico` trên DevTools:** Tạo và tích hợp bộ biểu tượng thương hiệu CarePlus+ đa định dạng:
+  * `public/favicon.ico`: Định dạng chuẩn ICO (trình duyệt tự động nạp).
+  * `public/favicon.svg`: Icon vector SVG độ nét cao với biểu tượng nhịp tim y tế & nền xanh ngọc gradient.
+  * `public/icon.png`: Định dạng PNG tối ưu cho thiết bị di động và Apple Touch Icon.
+* **Cập nhật App Metadata:** Đã cấu hình trường `icons` trong `src/app/layout.tsx` theo chuẩn Next.js App Router.
+
+### 2. Chuẩn Hóa Vòng Đời Trạng Thái Lịch Hẹn (Smart Appointment Status)
+* **Phân biệt luồng đặt lịch:**
+  * **Tự chọn Bác sĩ (`SELF_SELECTED` / Có `doctorId`):** Lịch hẹn được thiết lập ngay trạng thái **`CONFIRMED`** (*Đã xác nhận & Chờ khám*), xuất hiện ngay trong hàng chờ khám của Bác sĩ.
+  * **Tự động xếp Bác sĩ (`AUTO_ASSIGN` / Chưa có `doctorId`):** Thiết lập trạng thái **`PENDING`** (*Chờ sắp xếp bác sĩ*), chờ Admin / Lễ tân điều phối bác sĩ trong Admin Portal.
+* **Bộ hàm hiển thị thông minh (`getStatusLabel` & `getStatusBadgeStyle`):** Tự động nhận diện dữ liệu lịch hẹn, hiển thị nhãn và màu sắc tương ứng chuẩn xác trên toàn bộ giao diện (Bệnh nhân, Bác sĩ, Admin).
+
+### 3. Nâng Cấp Mục "Lịch Sử & Chẩn Đoán" và "Đơn Thuốc Điện Tử" của Bệnh Nhân
+* **Khắc phục và bổ sung đầy đủ thông tin Bác sĩ khám:**
+  * Cập nhật API `src/app/api/appointments/route.ts` nạp quan hệ lồng nhau `doctor` $\rightarrow$ `user` $\rightarrow$ `specialty` cho `medicalRecord`.
+  * Hiển thị khối thông tin Bác sĩ phụ trách chuyên nghiệp: Avatar có viền xanh y tế, Học vị, Chuyên khoa và Họ tên bác sĩ.
+* **Tối ưu hóa Typography & Font-size dễ đọc:**
+  * Tiêu đề chẩn đoán y khoa nâng cấp lên cỡ **`text-lg sm:text-2xl font-extrabold`** kèm huy hiệu y khoa nổi bật.
+  * Triệu chứng lâm sàng tăng lên **`text-sm sm:text-base`** trên nền bo góc thoáng đãng.
+  * Lời khuyên & dặn dò của bác sĩ nổi bật trong thẻ thông báo y khoa màu hổ phách (`bg-amber-50`), font chữ to, đậm, rõ ràng.
+  * Nút "Xem Chi Tiết Đơn Thuốc" nổi bật với gradient màu xanh ngọc, hiển thị rõ số lượng loại thuốc đã kê.
+* **Đồng bộ hóa Modal In Đơn Thuốc PDF:** Cập nhật thông tin Bác sĩ kê đơn (Họ tên, Học vị, Chuyên khoa) và Bệnh nhân chuẩn xác khi in hoặc xuất file PDF.
+
+### 4. Đảm Bảo Type Safety Toàn Diện
+* Bổ sung đầy đủ quan hệ `doctor?: DoctorInfo | null`, `patient?` và `appointment?: Appointment | null` trong interface `MedicalRecord` ([src/types/index.ts](file:///d:/PhongKham2026/src/types/index.ts)).
+* Kiểm tra toàn bộ mã nguồn với TypeScript Compiler (`tsc --noEmit`), đảm bảo **0 lỗi compile**.
 
 ---
 

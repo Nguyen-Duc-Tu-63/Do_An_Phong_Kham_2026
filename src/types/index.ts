@@ -68,12 +68,13 @@ export interface MedicalRecord {
   diagnosis: string;
   notes?: string | null;
   createdAt: string;
-  doctor?: DoctorInfo;
+  doctor?: DoctorInfo | null;
   patient?: {
     fullName: string;
     email: string;
     phone: string;
-  };
+  } | null;
+  appointment?: Appointment | null;
   prescriptions: Prescription[];
 }
 

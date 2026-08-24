@@ -41,6 +41,12 @@ export async function GET(request: Request) {
         medicalRecord: {
           include: {
             prescriptions: true,
+            doctor: {
+              include: {
+                user: { select: { fullName: true, email: true, phone: true, avatarUrl: true } },
+                specialty: true,
+              },
+            },
           },
         },
       },
@@ -104,22 +110,25 @@ export async function POST(request: Request) {
       }
     }
 
-    const bookingType = body.bookingType || (body.doctorId ? 'SELF_SELECTED' : 'AUTO_ASSIGN');
+    const hasDoctor = Boolean(body.doctorId && body.doctorId !== 'AUTO_ASSIGN');
+    const bookingType = body.bookingType || (hasDoctor ? 'SELF_SELECTED' : 'AUTO_ASSIGN');
+    const initialStatus = hasDoctor ? 'CONFIRMED' : 'PENDING';
 
     const newAppt = await prisma.appointment.create({
       data: {
         patientId: targetPatientId,
-        doctorId: body.doctorId || null,
+        doctorId: hasDoctor ? body.doctorId : null,
         specialtyId: body.specialtyId,
         appointmentDate: body.appointmentDate,
         appointmentTime: body.appointmentTime,
         bookingType,
         patientNotes: body.patientNotes || null,
-        status: 'PENDING',
+        status: initialStatus,
       },
       include: {
         specialty: true,
         patient: { select: { fullName: true } },
+        doctor: { include: { user: true } },
       },
     });
 
@@ -186,6 +195,12 @@ export async function PATCH(request: Request) {
         medicalRecord: {
           include: {
             prescriptions: true,
+            doctor: {
+              include: {
+                user: { select: { fullName: true, email: true, phone: true, avatarUrl: true } },
+                specialty: true,
+              },
+            },
           },
         },
       },

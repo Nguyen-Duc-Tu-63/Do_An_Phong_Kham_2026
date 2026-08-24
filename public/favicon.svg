@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="carePlusGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+  </defs>
+  <rect width="48" height="48" rx="12" fill="url(#carePlusGrad)" />
+  <path d="M24 10 C16 10, 10 16, 10 22 C10 28, 17 34, 24 39 C31 34, 38 28, 38 22 C38 16, 32 10, 24 10 Z" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.35"/>
+  <path d="M15 24 H20 L22 17 L26 31 L28 24 H33" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

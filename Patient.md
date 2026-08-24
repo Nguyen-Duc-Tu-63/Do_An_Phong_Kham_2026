@@ -81,9 +81,9 @@ Phân hệ **Bệnh Nhân (Patient System)** của phòng khám CarePlus+ đư�
 ```
 
 ### Vòng đời trạng thái Lịch Hẹn (`Appointment.status`):
-- `PENDING`: Lịch hẹn mới tạo từ phía bệnh nhân, đang chờ Lễ tân / Quản lý kiểm tra và duyệt.
-- `CONFIRMED`: Đã được duyệt, bác sĩ sẵn sàng tiếp nhận khám bệnh theo giờ hẹn.
-- `NEEDS_REASSIGNMENT`: Bác sĩ báo bận đột xuất, chuyển quyền điều phối lại cho Admin.
+- `CONFIRMED`: Đã xác nhận & Chờ khám. Được thiết lập ngay khi bệnh nhân **Tự chọn Bác sĩ cụ thể** (`SELF_SELECTED`), hoặc sau khi Lễ tân hoàn tất phân công bác sĩ cho ca khám tự động.
+- `PENDING`: Chờ sắp xếp bác sĩ (chỉ áp dụng khi bệnh nhân chọn **Phòng khám tự động xếp bác sĩ** `AUTO_ASSIGN` và chưa có bác sĩ phụ trách).
+- `NEEDS_REASSIGNMENT`: Bác sĩ báo bận đột xuất, chuyển quyền điều phối khẩn cấp lại cho Admin / Lễ tân.
 - `COMPLETED`: Bệnh nhân đã khám xong, bác sĩ đã hoàn tất bệnh án và kê đơn thuốc điện tử.
 - `CANCELLED`: Lịch hẹn đã bị hủy bỏ bởi bệnh nhân hoặc phòng khám (được gỡ khỏi hàng chờ khám).
 
@@ -105,7 +105,7 @@ Phân hệ **Bệnh Nhân (Patient System)** của phòng khám CarePlus+ đư�
      8. *Khoa Cơ Xương Khớp* (Thoái hóa khớp, thoát vị đĩa đệm, tiêm PRP khớp)
      9. *Khoa Sản Phụ Khoa* (Khám thai định kỳ, siêu âm 4D, tầm soát phụ khoa)
      10. *Khoa Tiêu Hóa - Gan Mật* (Nội soi tiêu hóa không đau, trào ngược dạ dày, men gan cao)
-   - **Đội ngũ 12 Bác Sĩ Chuyên Khoa:** Hiển thị ảnh chân dung bác sĩ, bằng cấp chuyên khoa, số năm kinh nghiệm và chi phí khám minh bạch.
+   - **Đội ngũ 30 Bác Sĩ Chuyên Khoa (3 Bác sĩ / Chuyên khoa):** Hiển thị ảnh chân dung bác sĩ, bằng cấp chuyên khoa, số năm kinh nghiệm và chi phí khám minh bạch.
 
 ---
 
@@ -120,8 +120,8 @@ Quy trình được chuẩn hóa qua 3 bước thông minh:
 #### Bước 1: Chọn Chuyên Khoa & Hình Thức Xếp Bác Sĩ
 - Bệnh nhân chọn 1 trong 10 chuyên khoa khám bệnh.
 - Lựa chọn hình thức xếp bác sĩ:
-  - **Tùy chọn 1: Hệ thống tự động xếp (Mặc định):** Phòng khám tự động chọn bác sĩ giỏi đang còn lịch trống phù hợp nhất.
-  - **Tùy chọn 2: Tự chọn bác sĩ cụ thể:** Hiển thị danh sách bác sĩ thuộc chuyên khoa đã chọn kèm học vị, số năm kinh nghiệm và giá khám để bệnh nhân chọn bác sĩ mình tin tưởng.
+  - **Tùy chọn 1: Hệ thống tự động xếp (Mặc định):** Phòng khám tự động chọn bác sĩ giỏi đang còn lịch trống phù hợp nhất (Trạng thái ban đầu: `PENDING`).
+  - **Tùy chọn 2: Tự chọn bác sĩ cụ thể:** Hiển thị danh sách bác sĩ thuộc chuyên khoa đã chọn kèm học vị, số năm kinh nghiệm và giá khám để bệnh nhân chọn bác sĩ mình tin tưởng (Trạng thái ban đầu: `CONFIRMED`).
 
 #### Bước 2: Chọn Ngày & Hiển Thị Tất Cả Các Suất Khám Trong Ngày
 - **Chọn ngày khám:**
@@ -146,7 +146,9 @@ Quy trình được chuẩn hóa qua 3 bước thông minh:
 #### Xử lý tại Backend (`POST /api/appointments`):
 1. Tìm người dùng trong cơ sở dữ liệu theo `phone`.
 2. Nếu chưa có: Tự động khởi tạo một tài khoản Bệnh nhân mới (`role: PATIENT`) gắn với SĐT đó và mật khẩu mặc định `password123`.
-3. Tạo bản ghi `Appointment` với trạng thái `PENDING`.
+3. **Phân bổ trạng thái thông minh:**
+   - Nếu bệnh nhân tự chọn bác sĩ cụ thể (`doctorId` hợp lệ) $\rightarrow$ Thiết lập `status = 'CONFIRMED'`.
+   - Nếu chọn tự động điều phối (`doctorId = null`) $\rightarrow$ Thiết lập `status = 'PENDING'`.
 4. Tạo bản ghi `Notification` gửi tới Quản lý và Bác sĩ được chỉ định.
 5. Lưu SĐT vào `localStorage` của trình duyệt (`careplus_patient_phone`).
 6. Chuyển hướng tức thì bệnh nhân sang trang Theo Dõi Hồ Sơ: `/dashboard?phone=0901234567`.
@@ -169,15 +171,17 @@ Hệ thống hỗ trợ 2 cơ chế theo dõi thuận tiện:
 #### Nội dung hiển thị trên các Tab theo dõi:
 - **Tab 1 — Lịch Hẹn Khám:**
   - Hiển thị danh sách ca khám sắp diễn ra.
-  - Tên bác sĩ, chuyên khoa, ngày khám, khung giờ khám và huy hiệu trạng thái (`Chờ duyệt`, `Đã xác nhận`, `Cần đổi bác sĩ`).
+  - Tên bác sĩ phụ trách, chuyên khoa, ngày khám, khung giờ khám và huy hiệu trạng thái thông minh (`Đã xác nhận (Chờ khám)`, `Chờ sắp xếp bác sĩ`, `Cần đổi bác sĩ gấp`).
   - Nút **"Hủy Lịch Hẹn"** màu đỏ giúp bệnh nhân hủy lịch khám chủ động.
-- **Tab 2 — Lịch Sử & Bệnh Án:**
+- **Tab 2 — Lịch Sử & Bệnh Án (Được Nâng Cấp Toàn Diện):**
   - Danh sách các ca khám đã hoàn tất (`COMPLETED`).
-  - Kết quả chẩn đoán y khoa, triệu chứng lâm sàng và lời khuyên của bác sĩ.
-  - Nút *"Xem Đơn Thuốc"* mở nhanh danh mục thuốc đã kê.
+  - **Khối thông tin Bác sĩ khám chuyên nghiệp:** Hiển thị ảnh đại diện Bác sĩ có viền xanh y tế, Học vị, Chuyên khoa và Họ tên bác sĩ.
+  - **Typography cỡ chữ to, rõ nét:** Tiêu đề chẩn đoán y khoa (`text-lg sm:text-2xl font-extrabold`), triệu chứng lâm sàng (`text-sm sm:text-base`).
+  - **Lời khuyên & Dặn dò của bác sĩ nổi bật:** Trình bày trên thẻ thông báo y khoa nền hổ phách dịu mắt (`bg-amber-50`), font chữ to, đậm, dễ đọc.
+  - Nút **"Xem Chi Tiết Đơn Thuốc"** màu xanh gradient nổi bật kèm số lượng loại thuốc đã kê.
 - **Tab 3 — Đơn Thuốc Điện Tử:**
-  - Danh sách từng loại thuốc chi tiết (Tên thuốc, hàm lượng, cách dùng, thời gian uống).
-  - Nút **"In Đơn Thuốc PDF"**: Mở cửa sổ in ấn phiếu khám & toa thuốc chuẩn phòng khám CarePlus+ kèm chữ ký số và con dấu điện tử.
+  - Danh sách từng loại thuốc chi tiết (Tên thuốc, hàm lượng, cách dùng, thời gian uống) với huy hiệu rõ ràng.
+  - Nút **"In Đơn Thuốc PDF"**: Mở cửa sổ in ấn phiếu khám & toa thuốc chuẩn phòng khám CarePlus+ đầy đủ thông tin bác sĩ kê đơn, chẩn đoán, toa thuốc, chữ ký số và con dấu điện tử.
 
 ---
 
@@ -343,9 +347,11 @@ Khi đã đăng nhập, Tab **"Quản Lý Cá Nhân"** cho phép:
 2. **Hiển thị toàn bộ suất khám trực quan:** Phân chia rõ ràng Ca Sáng (08:00 – 11:30) và Ca Chiều (13:30 – 17:00), màu sắc phân biệt rõ suất còn trống và suất đã kín.
 3. **Nút chọn nhanh ngày khám:** Các nút *Hôm Nay*, *Ngày Mai*, *+2 Ngày* giúp bệnh nhân đặt lịch nhanh mà không cần mở lịch phức tạp.
 4. **Số Điện Thoại Đa Năng:** Vừa là tên đăng nhập, vừa là mã tra cứu hồ sơ trực tuyến, vừa là số nhận thông báo lịch hẹn.
-5. **Hủy lịch khám tiện lợi:** Bệnh nhân có thể tự hủy lịch trực tuyến trên Dashboard khi bận việc đột xuất, hệ thống phản hồi tức thì.
-6. **Đơn Thuốc Điện Tử Xuất Bản In PDF:** Toa thuốc điện tử chuẩn hóa đầy đủ thông tin phòng khám CarePlus+, chữ ký bác sĩ, liều dùng và sẵn sàng xuất bản in PDF mọi lúc.
-7. **Cá Nhân Hóa Toàn Diện:** Bệnh nhân dễ dàng tải ảnh đại diện từ máy tính hoặc lựa chọn các avatar mẫu đẹp mắt để hoàn thiện hồ sơ của mình.
+5. **Thiết Kế Trợ Năng Y Tế (Accessible Medical Typography):** Kích thước chữ (Font-size) trong mục Lịch sử khám & Đơn thuốc được tăng lớn, bố cục rõ ràng, trực quan, giúp bệnh nhân ở mọi lứa tuổi (đặc biệt là người lớn tuổi) dễ dàng đọc kết quả và hướng dẫn dùng thuốc.
+6. **Nhận Diện Thương Hiệu Đồng Bộ (CarePlus+ Favicon & Identity):** Tích hợp biểu tượng nhịp tim y tế sắc nét đa nền tảng (`favicon.ico`, `favicon.svg`, `icon.png`), tối ưu hiển thị trên tab trình duyệt và màn hình di động.
+7. **Hủy lịch khám tiện lợi:** Bệnh nhân có thể tự hủy lịch trực tuyến trên Dashboard khi bận việc đột xuất, hệ thống phản hồi tức thì.
+8. **Đơn Thuốc Điện Tử Xuất Bản In PDF:** Toa thuốc điện tử chuẩn hóa đầy đủ thông tin phòng khám CarePlus+, chữ ký bác sĩ, liều dùng và sẵn sàng xuất bản in PDF mọi lúc.
+9. **Cá Nhân Hóa Toàn Diện:** Bệnh nhân dễ dàng tải ảnh đại diện từ máy tính hoặc lựa chọn các avatar mẫu đẹp mắt để hoàn thiện hồ sơ của mình.
 
 ---
 *Tài liệu được biên soạn và cập nhật theo phiên bản hệ thống Phòng Khám CarePlus+ 2026.*

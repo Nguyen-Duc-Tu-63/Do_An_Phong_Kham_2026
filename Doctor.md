@@ -74,27 +74,12 @@ Phân hệ **Bác Sĩ (Doctor Portal / Workspace)** tại phòng khám CarePlus+
                                                               v
                                                    +-----------------------+
                                                    |     MedicalRecord     |
-                                                   | id | appointmentId    |
-                                                   | doctorId | patientId  |
-                                                   | symptoms | diagnosis  |
-                                                   | notes: String?        |
-                                                   +-----------------------+
-                                                              | 1-N
-                                                              v
-                                                   +-----------------------+
-                                                   |      Prescription     |
-                                                   | id | medicalRecordId  |
-                                                   | medicineName | dosage |
-                                                   | frequency | duration  |
-                                                   +-----------------------+
-```
-
-### Các trạng thái Lịch Hẹn Bác Sĩ xử lý:
-1. `PENDING`: Lịch hẹn vừa được bệnh nhân đặt, đang chờ phân công hoặc tiếp nhận.
-2. `CONFIRMED`: Đã xác nhận, bệnh nhân chuẩn bị vào phòng khám theo giờ hẹn.
-3. `COMPLETED`: Bác sĩ đã hoàn tất khám lâm sàng và phát hành đơn thuốc điện tử.
-4. `NEEDS_REASSIGNMENT`: Bác sĩ đã kích hoạt báo bận khẩn cấp, chuyển quyền xử lý cho Lễ tân.
-5. `CANCELLED`: Lịch hẹn đã bị bệnh nhân hủy bỏ trước giờ khám.
+ ### Các trạng thái Lịch Hẹn Bác Sĩ xử lý:
+1. `CONFIRMED`: Đã xác nhận & Chờ khám. Đây là trạng thái mặc định khi bệnh nhân đã chọn bác sĩ đích danh hoặc sau khi Admin phân công bác sĩ. Bác sĩ sẵn sàng tiếp nhận khám bệnh theo giờ hẹn.
+2. `PENDING`: Chờ sắp xếp bác sĩ (đối với các lịch đặt tự động điều phối `AUTO_ASSIGN` chưa có bác sĩ phụ trách).
+3. `COMPLETED`: Bác sĩ đã hoàn tất khám lâm sàng, ghi nhận bệnh án và phát hành đơn thuốc điện tử.
+4. `NEEDS_REASSIGNMENT`: Bác sĩ đã kích hoạt báo bận khẩn cấp, hệ thống chuyển quyền điều phối lại cho Quản lý / Lễ tân.
+5. `CANCELLED`: Lịch hẹn đã bị bệnh nhân hoặc phòng khám hủy bỏ trước giờ khám.
 
 ---
 
@@ -113,7 +98,7 @@ Phân hệ **Bác Sĩ (Doctor Portal / Workspace)** tại phòng khám CarePlus+
 Trên cùng của trang làm việc, Bác sĩ được cung cấp **3 Thẻ Thống Kê Real-Time** phản ánh toàn diện khối lượng công việc:
 
 1. **Thẻ 1 - Lịch Hẹn Chờ Khám (`waitingAppts.length`):**
-   - Đếm tổng số ca khám đang chờ xử lý (`PENDING`, `CONFIRMED`, `NEEDS_REASSIGNMENT`).
+   - Đếm tổng số ca khám đang chờ xử lý (`CONFIRMED`, `PENDING`, `NEEDS_REASSIGNMENT`).
    - Phân đoạn chi tiết: `Hôm nay: X ca • Sắp tới: Y ca`.
 2. **Thẻ 2 - Lịch Khám Hôm Nay (`todayTotalAppts.length`):**
    - Đếm tổng số bệnh nhân có lịch hẹn trong ngày hôm nay.
@@ -130,6 +115,34 @@ Tab **"Hàng Chờ & Lịch Khám"** hiển thị danh sách các bệnh nhân �
   - `Tất cả chờ khám`: Toàn bộ các ca chờ của bác sĩ.
   - `Hôm nay`: Lọc nhanh các ca cần tiếp đón trong ngày làm việc hiện tại.
   - `Lịch sắp tới`: Xem trước các ca khám trong các ngày tiếp theo để chuẩn bị.
+- **Trực quan hóa thời gian & Huy hiệu thông minh (`getStatusBadgeStyle` / `getStatusLabel`):**
+  - Ca khám hôm nay gắn tag nổi bật: `🟢 Hôm Nay lúc HH:mm` kèm hiệu ứng ping động.
+  - Ca khám ngày tới gắn tag: `📅 [Thứ, Ngày/Tháng] lúc HH:mm`.
+  - Huy hiệu trạng thái xanh ngọc chuẩn xác: `Đã xác nhận (Chờ khám)`.
+- **Thông tin lâm sàng ban đầu:** Hiển thị họ tên, SĐT, Email và triệu chứng bệnh nhân tự khai báo khi đặt lịch.
+
+---
+
+### Luồng 4: Quy Trình Khám Bệnh Lâm Sàng & Kê Đơn Thuốc Điện Tử Động
+Khi bác sĩ bấm **"🩺 Bắt Đầu Khám & Kê Đơn"**:
+
+1. **Khởi tạo Modal Khám Bệnh:**
+   - Hệ thống tự động nạp thông tin bệnh nhân và triệu chứng ban đầu vào form.
+2. **Nhập kết luận y khoa:**
+   - `Triệu chứng lâm sàng *`: Bác sĩ ghi nhận các biểu hiện thực tế khi thăm khám.
+   - `Chẩn đoán y khoa *`: Kết luận bệnh lý (Ví dụ: *Viêm phế quản cấp, Tăng huyết áp độ 1...*).
+   - `Lời khuyên & Chế độ sinh hoạt`: Hướng dẫn dinh dưỡng, vận động, lịch hẹn tái khám.
+3. **Kê Đơn Thuốc Động (Dynamic Prescription Rows):**
+   - Bác sĩ có thể bấm **"+ Thêm Thuốc"** hoặc xóa bớt thuốc linh hoạt.
+   - Mỗi mục thuốc gồm 4 trường chi tiết:
+     - *Tên thuốc* (Ví dụ: `Augmentin 1g`)
+     - *Hàm lượng* (Ví dụ: `1000mg`)
+     - *Cách dùng* (Ví dụ: `Uống 1 viên x 2 lần/ngày sau ăn`)
+     - *Thời gian dùng* (Ví dụ: `7 ngày`)
+4. **Lưu trữ & Phát hành:**
+   - Gửi yêu cầu `POST /api/medical-records`.
+   - Hệ thống tạo bản ghi `MedicalRecord`, liên kết mảng `Prescription`, liên kết quan hệ đa tầng `DoctorInfo` $\rightarrow$ `User` $\rightarrow$ `Specialty`, đồng thời cập nhật `Appointment.status = 'COMPLETED'`.
+   - Bệnh nhân ngay lập tức có thể xem lại kết quả chẩn đoán với đầy đủ họ tên, học vị, chuyên khoa của bác sĩ và in Đơn thuốc điện tử PDF tại Dashboard của mình.ớc các ca khám trong các ngày tiếp theo để chuẩn bị.
 - **Trực quan hóa thời gian:**
   - Ca khám hôm nay gắn tag nổi bật: `🟢 Hôm Nay lúc HH:mm` kèm hiệu ứng ping động.
   - Ca khám ngày tới gắn tag: `📅 [Thứ, Ngày/Tháng] lúc HH:mm`.

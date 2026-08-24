@@ -455,10 +455,11 @@ export default function AdminPortalPage() {
                           <td className="p-3.5">
                             <span
                               className={`px-2.5 py-0.5 rounded-full font-bold border ${getStatusBadgeStyle(
-                                appt.status
+                                appt.status,
+                                appt
                               )}`}
                             >
-                              {getStatusLabel(appt.status)}
+                              {getStatusLabel(appt.status, appt)}
                             </span>
                           </td>
                           <td className="p-3.5 text-right">

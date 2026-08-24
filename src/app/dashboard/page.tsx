@@ -92,7 +92,11 @@ function PatientDashboardContent() {
       setAppointments(apptsArr);
       const recsArr: MedicalRecord[] = apptsArr
         .filter((a) => a.medicalRecord)
-        .map((a) => a.medicalRecord!);
+        .map((a) => ({
+          ...a.medicalRecord!,
+          appointment: a,
+          doctor: a.medicalRecord?.doctor || a.doctor,
+        }));
       setRecords(recsArr);
 
       setActivePhone(cleanPhone);
@@ -158,7 +162,11 @@ function PatientDashboardContent() {
           setAppointments(apptsArr);
           const recsArr: MedicalRecord[] = apptsArr
             .filter((a) => a.medicalRecord)
-            .map((a) => a.medicalRecord!);
+            .map((a) => ({
+              ...a.medicalRecord!,
+              appointment: a,
+              doctor: a.medicalRecord?.doctor || a.doctor,
+            }));
           setRecords(recsArr);
           setHasSearched(true);
           setLoading(false);
@@ -236,7 +244,15 @@ function PatientDashboardContent() {
         const apptData = await apptRes.json();
         const apptsArr: Appointment[] = Array.isArray(apptData) ? apptData : [];
         setAppointments(apptsArr);
-        setRecords(apptsArr.filter((a) => a.medicalRecord).map((a) => a.medicalRecord!));
+        setRecords(
+          apptsArr
+            .filter((a) => a.medicalRecord)
+            .map((a) => ({
+              ...a.medicalRecord!,
+              appointment: a,
+              doctor: a.medicalRecord?.doctor || a.doctor,
+            }))
+        );
       } else if (activePhone) {
         await fetchAppointmentsByPhone(activePhone);
       } else {
@@ -568,10 +584,11 @@ function PatientDashboardContent() {
                         <div className="flex flex-wrap items-center gap-3">
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusBadgeStyle(
-                              appt.status
+                              appt.status,
+                              appt
                             )}`}
                           >
-                            {getStatusLabel(appt.status)}
+                            {getStatusLabel(appt.status, appt)}
                           </span>
                           <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-lg">
                             Khoa: {appt.specialty?.name}
@@ -619,57 +636,120 @@ function PatientDashboardContent() {
 
             {/* TAB 2: MEDICAL HISTORY & DIAGNOSIS */}
             {activeTab === 'history' && (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {records.length === 0 ? (
-                  <div className="py-12 text-center text-slate-400 space-y-3">
-                    <FileText className="w-12 h-12 mx-auto text-slate-300" />
-                    <p className="text-sm font-semibold">Chưa có hồ sơ khám bệnh nào hoàn tất.</p>
+                  <div className="py-16 text-center text-slate-400 space-y-3 bg-white rounded-3xl border-2 border-slate-100 p-8">
+                    <FileText className="w-14 h-14 mx-auto text-slate-300" />
+                    <p className="text-base font-bold text-slate-600">Chưa có hồ sơ khám bệnh nào hoàn tất.</p>
+                    <p className="text-xs text-slate-400">Sau khi bác sĩ hoàn thành buổi khám và kê đơn, kết quả sẽ hiển thị chi tiết tại đây.</p>
                   </div>
                 ) : (
-                  records.map((rec) => (
-                    <div
-                      key={rec.id}
-                      className="p-5 rounded-2xl border-2 border-slate-200 bg-white hover:border-emerald-300 transition-all space-y-3"
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-2">
-                        <div>
-                          <h4 className="font-bold text-slate-800 text-base">
-                            Chẩn Đoán: {rec.diagnosis}
-                          </h4>
-                          <p className="text-xs text-slate-500 mt-0.5">
-                            Bác sĩ khám: {rec.doctor?.user.fullName} ({rec.doctor?.specialty?.name})
-                          </p>
-                        </div>
-                        <span className="text-xs text-emerald-700 font-bold bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 w-fit">
-                          {formatDate(rec.createdAt)}
-                        </span>
-                      </div>
+                  records.map((rec) => {
+                    const doctorName =
+                      rec.doctor?.user?.fullName ||
+                      rec.appointment?.doctor?.user?.fullName ||
+                      'Bác sĩ chuyên khoa';
+                    const doctorDegree =
+                      rec.doctor?.degree ||
+                      rec.appointment?.doctor?.degree ||
+                      'Bác sĩ điều trị';
+                    const doctorSpecialty =
+                      rec.doctor?.specialty?.name ||
+                      rec.appointment?.specialty?.name ||
+                      'Khoa Khám Bệnh';
+                    const doctorAvatar =
+                      rec.doctor?.user?.avatarUrl ||
+                      rec.appointment?.doctor?.user?.avatarUrl ||
+                      'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=200&q=80';
 
-                      <div className="text-xs space-y-1.5 text-slate-600">
-                        <p>
-                          <strong className="text-slate-800">Triệu chứng lâm sàng:</strong> {rec.symptoms}
-                        </p>
-                        {rec.notes && (
-                          <p>
-                            <strong className="text-slate-800">Lời khuyên bác sĩ:</strong> {rec.notes}
-                          </p>
+                    return (
+                      <div
+                        key={rec.id}
+                        className="p-6 sm:p-7 rounded-3xl border-2 border-slate-200 bg-white hover:border-emerald-400 transition-all shadow-sm hover:shadow-md space-y-5"
+                      >
+                        {/* Header: Diagnosis & Date */}
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between border-b border-slate-100 pb-4 gap-3">
+                          <div className="space-y-1.5 flex-1">
+                            <span className="text-xs font-extrabold text-emerald-800 uppercase tracking-wider bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-200 inline-block">
+                              🩺 Kết Quả Chẩn Đoán Y Khoa
+                            </span>
+                            <h4 className="font-extrabold text-slate-900 text-lg sm:text-2xl leading-tight">
+                              Chẩn Đoán: {rec.diagnosis}
+                            </h4>
+                          </div>
+
+                          <div className="flex items-center gap-2 self-start shrink-0">
+                            <span className="text-xs sm:text-sm text-emerald-800 font-bold bg-emerald-50 px-3.5 py-1.5 rounded-xl border border-emerald-200 flex items-center gap-1.5 shadow-xs">
+                              <Calendar className="w-4 h-4 text-emerald-600" />
+                              {formatDate(rec.createdAt)}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Doctor Info Box */}
+                        <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                          <img
+                            src={doctorAvatar}
+                            alt={doctorName}
+                            className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover border-2 border-emerald-400 shrink-0 shadow-xs"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-xs font-bold text-emerald-700 bg-white border border-emerald-200 px-2.5 py-0.5 rounded-md">
+                                {doctorDegree}
+                              </span>
+                              <span className="text-xs font-semibold text-slate-600 bg-white border border-slate-200 px-2.5 py-0.5 rounded-md">
+                                Khoa: {doctorSpecialty}
+                              </span>
+                            </div>
+                            <p className="text-base sm:text-lg font-extrabold text-slate-900 mt-1 truncate">
+                              Bác Sĩ Khám: {doctorName}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Clinical Details with Larger Font */}
+                        <div className="space-y-3.5">
+                          <div className="p-4 bg-slate-50/80 border border-slate-200 rounded-2xl space-y-1">
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                              <FileText className="w-4 h-4 text-slate-600" /> Triệu Chứng Lâm Sàng Khai Báo
+                            </p>
+                            <p className="text-sm sm:text-base text-slate-800 font-medium leading-relaxed">
+                              {rec.symptoms}
+                            </p>
+                          </div>
+
+                          {rec.notes && (
+                            <div className="p-4 bg-amber-50/80 border-2 border-amber-200/80 rounded-2xl space-y-1">
+                              <p className="text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
+                                <Sparkles className="w-4 h-4 text-amber-600" /> Lời Khuyên & Dặn Dò Của Bác Sĩ
+                              </p>
+                              <p className="text-sm sm:text-base text-slate-900 font-bold leading-relaxed">
+                                {rec.notes}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Prescription Button Footer */}
+                        {rec.prescriptions && rec.prescriptions.length > 0 && (
+                          <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                            <span className="text-xs sm:text-sm font-bold text-slate-600 flex items-center gap-1.5">
+                              <Pill className="w-4 h-4 text-emerald-600" /> Đã kê kèm <strong className="text-emerald-700">{rec.prescriptions.length} loại thuốc</strong> điều trị
+                            </span>
+                            <Button
+                              variant="secondary"
+                              size="md"
+                              onClick={() => setSelectedRecordForPrint(rec)}
+                              className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-5 py-2.5 rounded-xl shadow-md text-sm sm:text-base cursor-pointer"
+                            >
+                              <Pill className="w-4 h-4 mr-2" /> Xem Chi Tiết Đơn Thuốc ({rec.prescriptions.length} Thuốc)
+                            </Button>
+                          </div>
                         )}
                       </div>
-
-                      {rec.prescriptions && rec.prescriptions.length > 0 && (
-                        <div className="pt-2 flex justify-end">
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => setSelectedRecordForPrint(rec)}
-                            className="bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 font-bold"
-                          >
-                            <Pill className="w-3.5 h-3.5 mr-1" /> Xem Đơn Thuốc ({rec.prescriptions.length} Loại Thuốc)
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             )}
@@ -678,44 +758,65 @@ function PatientDashboardContent() {
             {activeTab === 'prescriptions' && (
               <div className="space-y-4">
                 {records.filter((r) => r.prescriptions && r.prescriptions.length > 0).length === 0 ? (
-                  <div className="py-12 text-center text-slate-400 space-y-3">
-                    <Pill className="w-12 h-12 mx-auto text-slate-300" />
-                    <p className="text-sm font-semibold">Chưa có đơn thuốc điện tử nào.</p>
+                  <div className="py-16 text-center text-slate-400 space-y-3 bg-white rounded-3xl border-2 border-slate-100 p-8">
+                    <Pill className="w-14 h-14 mx-auto text-slate-300" />
+                    <p className="text-base font-bold text-slate-600">Chưa có đơn thuốc điện tử nào.</p>
                   </div>
                 ) : (
                   records
                     .filter((r) => r.prescriptions && r.prescriptions.length > 0)
-                    .map((rec) => (
-                      <div
-                        key={rec.id}
-                        className="p-5 rounded-2xl border-2 border-slate-200 bg-white hover:border-emerald-300 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-                      >
-                        <div className="space-y-1">
-                          <h4 className="font-bold text-slate-800 text-sm">
-                            Đơn thuốc kê bởi Bác Sĩ {rec.doctor?.user.fullName}
-                          </h4>
-                          <p className="text-xs text-slate-500">
-                            Ngày kê: {formatDate(rec.createdAt)} • Chẩn đoán: {rec.diagnosis}
-                          </p>
-                          <div className="flex flex-wrap gap-2 pt-1">
-                            {rec.prescriptions.map((p, idx) => (
-                              <Badge key={idx} variant="emerald">
-                                {p.medicineName} ({p.dosage})
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
+                    .map((rec) => {
+                      const doctorName =
+                        rec.doctor?.user?.fullName ||
+                        rec.appointment?.doctor?.user?.fullName ||
+                        'Bác sĩ chuyên khoa';
+                      const doctorDegree =
+                        rec.doctor?.degree ||
+                        rec.appointment?.doctor?.degree ||
+                        'Bác sĩ';
 
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedRecordForPrint(rec)}
-                          className="font-bold text-emerald-800 border-emerald-300 hover:bg-emerald-50"
+                      return (
+                        <div
+                          key={rec.id}
+                          className="p-6 rounded-3xl border-2 border-slate-200 bg-white hover:border-emerald-400 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 shadow-sm"
                         >
-                          <Printer className="w-4 h-4 mr-1.5" /> In Đơn Thuốc PDF
-                        </Button>
-                      </div>
-                    ))
+                          <div className="space-y-2.5 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-lg">
+                                {doctorDegree} {doctorName}
+                              </span>
+                              <span className="text-xs text-slate-500 font-medium">
+                                Ngày kê: {formatDate(rec.createdAt)}
+                              </span>
+                            </div>
+
+                            <h4 className="font-extrabold text-slate-900 text-base sm:text-lg">
+                              Chẩn đoán: {rec.diagnosis}
+                            </h4>
+
+                            <div className="flex flex-wrap gap-2 pt-1">
+                              {rec.prescriptions.map((p, idx) => (
+                                <span
+                                  key={idx}
+                                  className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 px-3 py-1.5 rounded-xl shadow-xs"
+                                >
+                                  <Pill className="w-3.5 h-3.5 text-emerald-600" />
+                                  {p.medicineName} ({p.dosage})
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+
+                          <Button
+                            variant="outline"
+                            onClick={() => setSelectedRecordForPrint(rec)}
+                            className="font-bold text-emerald-800 border-2 border-emerald-400 hover:bg-emerald-50 shrink-0 px-4 py-2.5 rounded-xl text-sm sm:text-base shadow-xs cursor-pointer"
+                          >
+                            <Printer className="w-4 h-4 mr-2 text-emerald-600" /> In Đơn Thuốc PDF
+                          </Button>
+                        </div>
+                      );
+                    })
                 )}
               </div>
             )}
@@ -926,9 +1027,20 @@ function PatientDashboardContent() {
               <div>
                 <p className="text-slate-400 font-semibold uppercase">Bác Sĩ Kê Đơn</p>
                 <p className="font-bold text-slate-800 text-sm">
-                  {selectedRecordForPrint.doctor?.user.fullName}
+                  {selectedRecordForPrint.doctor?.user?.fullName ||
+                    selectedRecordForPrint.appointment?.doctor?.user?.fullName ||
+                    'Bác sĩ điều trị'}
                 </p>
-                <p className="text-slate-600">{selectedRecordForPrint.doctor?.degree}</p>
+                <p className="text-slate-600">
+                  {selectedRecordForPrint.doctor?.degree ||
+                    selectedRecordForPrint.appointment?.doctor?.degree ||
+                    'BS Chuyên Khoa'}{' '}
+                  {selectedRecordForPrint.doctor?.specialty?.name
+                    ? `• ${selectedRecordForPrint.doctor.specialty.name}`
+                    : selectedRecordForPrint.appointment?.specialty?.name
+                    ? `• ${selectedRecordForPrint.appointment.specialty.name}`
+                    : ''}
+                </p>
               </div>
               <div>
                 <p className="text-slate-400 font-semibold uppercase">Bệnh Nhân</p>

@@ -399,10 +399,11 @@ export default function DoctorPortalPage() {
 
                             <span
                               className={`px-3 py-0.5 rounded-full text-xs font-bold border ${getStatusBadgeStyle(
-                                appt.status
+                                appt.status,
+                                appt
                               )}`}
                             >
-                              {getStatusLabel(appt.status)}
+                              {getStatusLabel(appt.status, appt)}
                             </span>
 
                             {appt.specialty?.name && (

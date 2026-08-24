@@ -23,6 +23,13 @@ const beVietnamPro = Be_Vietnam_Pro({
 export const metadata: Metadata = {
   title: 'CarePlus+ — Hệ Thống Phòng Khám Đặt Lịch & Theo Dõi Hồ Sơ Y Tế',
   description: 'Đặt lịch khám bệnh trực tuyến nhanh chóng, chọn bác sĩ chuyên khoa và xem đơn thuốc điện tử an toàn.',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+    apple: '/icon.png',
+  },
 };
 
 export default function RootLayout({

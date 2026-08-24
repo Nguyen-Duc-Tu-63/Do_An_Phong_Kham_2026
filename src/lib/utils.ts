@@ -75,14 +75,23 @@ export function generateTimeSlots(
   return slots;
 }
 
-export function getStatusBadgeStyle(status: string) {
+export function getStatusBadgeStyle(status: string, apptOrHasDoctor?: any) {
+  let hasDoctor = false;
+  if (typeof apptOrHasDoctor === 'boolean') {
+    hasDoctor = apptOrHasDoctor;
+  } else if (apptOrHasDoctor && typeof apptOrHasDoctor === 'object') {
+    hasDoctor = Boolean(apptOrHasDoctor.doctorId || apptOrHasDoctor.doctor);
+  }
+
   switch (status) {
     case 'CONFIRMED':
       return 'bg-emerald-50 text-emerald-700 border-emerald-200';
     case 'COMPLETED':
       return 'bg-blue-50 text-blue-700 border-blue-200';
     case 'PENDING':
-      return 'bg-amber-50 text-amber-700 border-amber-200';
+      return hasDoctor
+        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+        : 'bg-amber-50 text-amber-700 border-amber-200';
     case 'CANCELLED':
       return 'bg-slate-100 text-slate-600 border-slate-200';
     case 'NEEDS_REASSIGNMENT':
@@ -92,14 +101,21 @@ export function getStatusBadgeStyle(status: string) {
   }
 }
 
-export function getStatusLabel(status: string) {
+export function getStatusLabel(status: string, apptOrHasDoctor?: any) {
+  let hasDoctor = false;
+  if (typeof apptOrHasDoctor === 'boolean') {
+    hasDoctor = apptOrHasDoctor;
+  } else if (apptOrHasDoctor && typeof apptOrHasDoctor === 'object') {
+    hasDoctor = Boolean(apptOrHasDoctor.doctorId || apptOrHasDoctor.doctor);
+  }
+
   switch (status) {
     case 'CONFIRMED':
-      return 'Đã xác nhận';
+      return 'Đã xác nhận (Chờ khám)';
     case 'COMPLETED':
       return 'Đã hoàn thành khám';
     case 'PENDING':
-      return 'Chờ sắp xếp bác sĩ';
+      return hasDoctor ? 'Đã xác nhận (Chờ khám)' : 'Chờ sắp xếp bác sĩ';
     case 'CANCELLED':
       return 'Đã hủy lịch';
     case 'NEEDS_REASSIGNMENT':
