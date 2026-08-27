@@ -15,7 +15,16 @@ export function formatCurrency(amount: number): string {
 
 export function formatDate(dateString: string): string {
   if (!dateString) return '';
-  const date = new Date(dateString);
+  // Chuỗi date YYYY-MM-DD nếu tạo new Date('YYYY-MM-DD') có thể bị lệch múi giờ UTC
+  // Sử dụng cắt chuỗi hoặc format an toàn
+  const parts = dateString.split('-');
+  let date: Date;
+  if (parts.length === 3) {
+    // Năm, Tháng (0-indexed), Ngày theo giờ địa phương
+    date = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+  } else {
+    date = new Date(dateString);
+  }
   if (isNaN(date.getTime())) return dateString;
   return new Intl.DateTimeFormat('vi-VN', {
     weekday: 'long',
@@ -23,6 +32,55 @@ export function formatDate(dateString: string): string {
     month: 'long',
     day: 'numeric',
   }).format(date);
+}
+
+/**
+ * Trả về chuỗi ngày hôm nay YYYY-MM-DD theo múi giờ Việt Nam (Asia/Ho_Chi_Minh)
+ */
+export function getVietnamDateString(date: Date = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}
+
+/**
+ * Trả về chuỗi ngày mai YYYY-MM-DD theo múi giờ Việt Nam
+ */
+export function getVietnamTomorrowString(): string {
+  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  return getVietnamDateString(tomorrow);
+}
+
+/**
+ * Lấy danh sách N ngày gần nhất tính đến hôm nay theo múi giờ Việt Nam
+ */
+export function getRecentDaysVN(numDays: number = 7): { dateStr: string; label: string; shortLabel: string }[] {
+  const days: { dateStr: string; label: string; shortLabel: string }[] = [];
+  const now = new Date();
+
+  for (let i = numDays - 1; i >= 0; i--) {
+    const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+    const dateStr = getVietnamDateString(d);
+
+    const label = new Intl.DateTimeFormat('vi-VN', {
+      timeZone: 'Asia/Ho_Chi_Minh',
+      weekday: 'short',
+      day: '2-digit',
+      month: '2-digit',
+    }).format(d);
+
+    const shortLabel = new Intl.DateTimeFormat('vi-VN', {
+      timeZone: 'Asia/Ho_Chi_Minh',
+      day: '2-digit',
+      month: '2-digit',
+    }).format(d);
+
+    days.push({ dateStr, label, shortLabel });
+  }
+  return days;
 }
 
 export const STANDARD_MORNING_SLOTS = [
