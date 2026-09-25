@@ -18,6 +18,7 @@
 5. [Sơ Đồ Luồng Dữ Liệu & Trình Tự Thực Thi (Sequence Diagrams)](#5-sơ-đồ-luồng-dữ-liệu--trình-tự-thực-thi)
 6. [Danh Sách Các Endpoint API Phục Vụ Bác Sĩ](#6-danh-sách-các-endpoint-api-phục-vụ-bác-sĩ)
 7. [Các Điểm Nhấn Về Trải Nghiệm Người Dùng (UX/UI Highlights)](#7-các-điểm-nhấn-về-trải-nghiệm-người-dùng)
+8. [Danh Bạ Đội Ngũ 30 Bác Sĩ Phòng Khám](#8-danh-bạ-đội-ngũ-30-bác-sĩ-phòng-khám-3-bác-sĩ--chuyên-khoa)
 
 ---
 
@@ -49,7 +50,24 @@ Phân hệ **Bác Sĩ (Doctor Portal / Workspace)** tại phòng khám CarePlus+
 
 ## 3. KIẾN TRÚC & MÔ HÌNH DỮ LIỆU LIÊN QUAN
 
+### 3.1. Sơ Đồ Thực Thể (Entity Relationship Diagram)
+
+```mermaid
+erDiagram
+    User ||--o| DoctorInfo : "1-1 (User role DOCTOR)"
+    DoctorInfo ||--o{ DoctorSchedule : "1-N (Lịch làm việc tuần)"
+    DoctorInfo ||--o{ Appointment : "1-N (Bác sĩ phụ trách ca khám)"
+    DoctorInfo ||--o{ MedicalRecord : "1-N (Bác sĩ lập hồ sơ bệnh án)"
+    Specialty ||--o{ DoctorInfo : "1-N (Khoa chuyên môn)"
+    Specialty ||--o{ Appointment : "1-N (Khoa khám bệnh)"
+    User ||--o{ Appointment : "1-N (Bệnh nhân đặt lịch)"
+    Appointment ||--o| MedicalRecord : "1-1 (Hồ sơ khám từ lịch hẹn)"
+    MedicalRecord ||--o{ Prescription : "1-N (Chi tiết đơn thuốc điện tử)"
 ```
+
+### 3.2. Cấu Trúc Khối Dữ Liệu (Schema Layout)
+
+```text
  +-------------------------------------------------------------------------+
  |                               User (Bác sĩ)                             |
  |  id: String (UUID) | fullName | email | phone | role: "DOCTOR"          |
@@ -74,7 +92,21 @@ Phân hệ **Bác Sĩ (Doctor Portal / Workspace)** tại phòng khám CarePlus+
                                                               v
                                                    +-----------------------+
                                                    |     MedicalRecord     |
- ### Các trạng thái Lịch Hẹn Bác Sĩ xử lý:
+                                                   | id | appointmentId    |
+                                                   | diagnosis | symptoms  |
+                                                   | notes (lời dặn)       |
+                                                   +-----------------------+
+                                                              | 1-N
+                                                              v
+                                                   +-----------------------+
+                                                   |     Prescription      |
+                                                   | id | medicalRecordId  |
+                                                   | medicineName | dosage |
+                                                   | frequency | duration  |
+                                                   +-----------------------+
+```
+
+### 3.3. Các trạng thái Lịch Hẹn Bác Sĩ xử lý:
 1. `CONFIRMED`: Đã xác nhận & Chờ khám. Đây là trạng thái mặc định khi bệnh nhân đã chọn bác sĩ đích danh hoặc sau khi Admin phân công bác sĩ. Bác sĩ sẵn sàng tiếp nhận khám bệnh theo giờ hẹn.
 2. `PENDING`: Chờ sắp xếp bác sĩ (đối với các lịch đặt tự động điều phối `AUTO_ASSIGN` chưa có bác sĩ phụ trách).
 3. `COMPLETED`: Bác sĩ đã hoàn tất khám lâm sàng, ghi nhận bệnh án và phát hành đơn thuốc điện tử.
@@ -142,34 +174,7 @@ Khi bác sĩ bấm **"🩺 Bắt Đầu Khám & Kê Đơn"**:
 4. **Lưu trữ & Phát hành:**
    - Gửi yêu cầu `POST /api/medical-records`.
    - Hệ thống tạo bản ghi `MedicalRecord`, liên kết mảng `Prescription`, liên kết quan hệ đa tầng `DoctorInfo` $\rightarrow$ `User` $\rightarrow$ `Specialty`, đồng thời cập nhật `Appointment.status = 'COMPLETED'`.
-   - Bệnh nhân ngay lập tức có thể xem lại kết quả chẩn đoán với đầy đủ họ tên, học vị, chuyên khoa của bác sĩ và in Đơn thuốc điện tử PDF tại Dashboard của mình.ớc các ca khám trong các ngày tiếp theo để chuẩn bị.
-- **Trực quan hóa thời gian:**
-  - Ca khám hôm nay gắn tag nổi bật: `🟢 Hôm Nay lúc HH:mm` kèm hiệu ứng ping động.
-  - Ca khám ngày tới gắn tag: `📅 [Thứ, Ngày/Tháng] lúc HH:mm`.
-- **Thông tin lâm sàng ban đầu:** Hiển thị họ tên, SĐT, Email và triệu chứng bệnh nhân tự khai báo khi đặt lịch.
-
----
-
-### Luồng 4: Quy Trình Khám Bệnh Lâm Sàng & Kê Đơn Thuốc Điện Tử Động
-Khi bác sĩ bấm **"🩺 Bắt Đầu Khám & Kê Đơn"**:
-
-1. **Khởi tạo Modal Khám Bệnh:**
-   - Hệ thống tự động nạp thông tin bệnh nhân và triệu chứng ban đầu vào form.
-2. **Nhập kết luận y khoa:**
-   - `Triệu chứng lâm sàng *`: Bác sĩ ghi nhận các biểu hiện thực tế khi thăm khám.
-   - `Chẩn đoán y khoa *`: Kết luận bệnh lý (Ví dụ: *Viêm phế quản cấp, Tăng huyết áp độ 1...*).
-   - `Lời khuyên & Chế độ sinh hoạt`: Hướng dẫn dinh dưỡng, vận động, lịch hẹn tái khám.
-3. **Kê Đơn Thuốc Động (Dynamic Prescription Rows):**
-   - Bác sĩ có thể bấm **"+ Thêm Thuốc"** hoặc xóa bớt thuốc linh hoạt.
-   - Mỗi mục thuốc gồm 4 trường chi tiết:
-     - *Tên thuốc* (Ví dụ: `Augmentin 1g`)
-     - *Hàm lượng* (Ví dụ: `1000mg`)
-     - *Cách dùng* (Ví dụ: `Uống 1 viên x 2 lần/ngày sau ăn`)
-     - *Thời gian dùng* (Ví dụ: `7 ngày`)
-4. **Lưu trữ & Phát hành:**
-   - Gửi yêu cầu `POST /api/medical-records`.
-   - Hệ thống tạo bản ghi `MedicalRecord`, liên kết mảng `Prescription`, đồng thời cập nhật `Appointment.status = 'COMPLETED'`.
-   - Bệnh nhân ngay lập tức có thể xem và in Đơn thuốc điện tử tại Dashboard của mình.
+   - Bệnh nhân ngay lập tức có thể xem lại kết quả chẩn đoán với đầy đủ họ tên, học vị, chuyên khoa của bác sĩ và in Đơn thuốc điện tử PDF tại Dashboard của mình.
 
 ---
 
@@ -219,7 +224,31 @@ Tab **"Lịch Đã Hủy"** thống kê các ca khám bệnh nhân đã tự h�
 ## 5. SƠ ĐỒ LUỒNG DỮ LIỆU & TRÌNH TỰ THỰC THI
 
 ### Sơ đồ 1: Quy trình Khám bệnh & Kê đơn thuốc điện tử
+
+#### Sơ đồ tương tác (Mermaid Sequence Diagram):
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Doctor as Bác Sĩ
+    participant UI as Doctor Portal (UI)
+    participant API as API (/api/medical-records)
+    participant DB as SQLite DB (Prisma)
+    actor Patient as Bệnh Nhân
+
+    Doctor->>UI: 1. Bấm "Bắt Đầu Khám & Kê Đơn"
+    UI-->>Doctor: Mở Consultation Modal (Form khám bệnh & kê đơn)
+    Doctor->>UI: 2. Nhập triệu chứng, chẩn đoán & thêm danh sách thuốc
+    Doctor->>UI: 3. Bấm "Hoàn tất khám & Lưu đơn thuốc"
+    UI->>API: 4. POST /api/medical-records (appointmentId, diagnosis, symptoms, prescriptions)
+    API->>DB: 5. Transaction: Tạo MedicalRecord + Tạo Prescriptions + Đổi status Appointment = "COMPLETED"
+    DB-->>API: 6. Transaction Committed thành công
+    API-->>UI: 7. HTTP 201 Created (MedicalRecord + Prescriptions)
+    UI-->>Doctor: 8. Toast Thành Công (Chuyển ca khám sang Tab "Lịch Sử Đã Khám")
+    UI-->>Patient: 9. Bệnh nhân xem kết quả khám & tải Đơn thuốc điện tử PDF tại Dashboard
 ```
+
+#### Sơ đồ dạng văn bản (ASCII Diagram):
+```text
 [Bác Sĩ]               [Doctor Portal (UI)]             [API /medical-records]         [SQLite DB]
    |                            |                                 |                         |
    |--- 1. Bấm Bắt Đầu Khám --->|                                 |                         |
@@ -238,8 +267,38 @@ Tab **"Lịch Đã Hủy"** thống kê các ca khám bệnh nhân đã tự h�
    |    (Chuyển sang Tab Lịch Sử)                                 |                         |
 ```
 
+---
+
 ### Sơ đồ 2: Quy trình Báo bận đột xuất & Điều phối thay thế 4 bên
+
+#### Sơ đồ tương tác (Mermaid Sequence Diagram):
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Doc as Bác Sĩ
+    participant UI as Doctor Portal (UI)
+    participant API as API (/api/doctor/urgent-unavailability)
+    participant DB as SQLite DB (Prisma)
+    actor Admin as Admin / Lễ Tân
+    actor Patient as Bệnh Nhân
+
+    Doc->>UI: 1. Bấm "Báo Đột Xuất Bận Khám" (Nhập lý do)
+    UI->>API: 2. POST /api/doctor/urgent-unavailability { reason }
+    API->>DB: 3. Query các lịch hẹn hôm nay (CONFIRMED / PENDING)
+    API->>DB: 4. Update status = "NEEDS_REASSIGNMENT"
+    API->>DB: 5. Tạo Notification "URGENT_DOCTOR_BUSY" gửi Admin
+    API-->>UI: 6. HTTP 200 OK (Số ca cần tái phân phối)
+    UI-->>Doc: 7. Toast xác nhận báo bận thành công
+    
+    DB-->>Admin: 8. Hiển thị Alert Banner đỏ & Thông báo chuông khẩn
+    Admin->>Admin: 9. Tiếp nhận và chọn Bác Sĩ thay thế phù hợp
+    Admin->>DB: 10. POST /api/appointments/reassign (Bác sĩ mới)
+    DB-->>Admin: 11. Cập nhật Appointment status = "CONFIRMED"
+    DB-->>Patient: 12. Cập nhật thông tin Bác Sĩ mới trên Dashboard
 ```
+
+#### Sơ đồ dạng văn bản (ASCII Diagram):
+```text
 [Bác Sĩ]             [Doctor Portal]      [API /urgent-unavailability]     [SQLite DB]        [Admin / Lễ Tân]       [Bệnh Nhân]
    |                        |                          |                        |                     |                 |
    |-- 1. Báo bận khẩn ---->|                          |                        |                     |                 |
@@ -286,6 +345,8 @@ Tab **"Lịch Đã Hủy"** thống kê các ca khám bệnh nhân đã tự h�
    - Thẻ lịch hẹn hôm nay có viền xanh lá và đèn hiệu nhấp nháy (`animate-ping`) giúp bác sĩ không bao giờ bỏ sót bệnh nhân đang có mặt tại phòng khám.
 4. **Tương thích mọi thiết bị:**
    - Bác sĩ có thể sử dụng mượt mà trên iPad/Tablet khi đi buồng khám hoặc trên máy tính bàn phòng khám chuyên khoa.
+
+---
 
 ## 8. DANH BẠ ĐỘI NGŨ 30 BÁC SĨ PHÒNG KHÁM (3 BÁC SĨ / CHUYÊN KHOA)
 
