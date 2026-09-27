@@ -26,6 +26,7 @@ import {
   Activity,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { AIChatBot } from '@/components/chat/AIChatBot';
 
 export default function HomePage() {
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
@@ -334,6 +335,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* FLOATING AI CHATBOT BUBBLE IN HOME PAGE CORNER */}
+      <AIChatBot />
     </div>
   );
 }

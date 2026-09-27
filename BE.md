@@ -456,6 +456,7 @@ Back-end tự động tạo thông báo trong bảng `Notification` dựa trên 
 | 25 | `GET` | `/api/admin/stats` | Thống kê KPI, doanh thu, biểu đồ | Không có | `200` (Toàn bộ dữ liệu phân tích BI) |
 | 26 | `GET` | `/api/notifications` | Lấy 20 thông báo gần nhất của user | Cookie xác thực | `200` (Kèm chi tiết lịch hẹn) |
 | 27 | `PUT` | `/api/notifications` | Đánh dấu thông báo đã đọc | Body: `{ notificationId? }` (nếu rỗng = đọc tất cả) | `200` |
+| 28 | `POST` | `/api/ai-chat` | AI Chatbot tư vấn triệu chứng, phân luồng chuyên khoa & gợi ý bác sĩ | Body: `{ message, history? }` | `200` (Kèm `suggestedSpecialty`, `suggestedDoctors`, `quickReplies`, `isEmergency`, `action`) |
 
 ---
 
