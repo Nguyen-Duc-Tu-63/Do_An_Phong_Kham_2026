@@ -92,34 +92,32 @@ sequenceDiagram
     participant Browser as 🍪 Trình duyệt (Cookie Store)
 
     User->>UI: Nhập Số điện thoại & Mật khẩu, bấm "Đăng nhập"
-    UI->>API: POST /api/auth/login { phone, password }
-    API->>DB: prisma.user.findFirst({ where: { phone } })
+    UI->>API: POST /api/auth/login (phone, password)
+    API->>DB: prisma.user.findFirst (Tìm người dùng theo SĐT)
     DB-->>API: Trả về bản ghi User (id, passwordHash, role, fullName)
     
-    alt Không tìm thấy tài khoản
-        API-->>UI: 401 Unauthorized: "Số điện thoại không tồn tại trong hệ thống"
+    alt Trường hợp 1: Không tìm thấy tài khoản
+        API-->>UI: 401 Unauthorized (Số điện thoại không tồn tại)
         UI-->>User: Hiển thị thông báo lỗi màu đỏ
-    else Tìm thấy tài khoản
-        API->>API: Gọi hàm bcrypt.compare(password, user.passwordHash)
+    else Trường hợp 2: Sai mật khẩu
+        API->>API: bcrypt.compare (Mật khẩu không khớp)
+        API-->>UI: 401 Unauthorized (Mật khẩu không chính xác)
+        UI-->>User: Hiển thị thông báo lỗi
+    else Trường hợp 3: Đăng nhập thành công
+        API->>API: bcrypt.compare (Mật khẩu khớp)
+        API->>API: Đóng gói User Session Token
+        API->>Browser: Ghi Cookie phongkham_session_user (HttpOnly, SameSite)
+        API-->>UI: 200 OK (Đăng nhập thành công, trả về Role)
         
-        alt Mật khẩu không chính xác
-            API-->>UI: 401 Unauthorized: "Mật khẩu không chính xác"
-            UI-->>User: Hiển thị thông báo lỗi
-        else Mật khẩu khớp hoàn toàn
-            API->>API: Đóng gói User Session Token { id, fullName, role, email }
-            API->>Browser: Set-Cookie: phongkham_session_user=...; HttpOnly; Path=/; SameSite=Lax
-            API-->>UI: 200 OK { success: true, user: { id, fullName, role } }
-            
-            Note over UI, User: Điều hướng trang theo Phân quyền (Role-based Navigation)
-            alt role === 'ADMIN'
-                UI->>UI: router.push('/admin')
-            else role === 'DOCTOR'
-                UI->>UI: router.push('/doctor')
-            else role === 'PATIENT'
-                UI->>UI: router.push('/dashboard')
-            end
-            UI-->>User: Hiển thị Cổng thông tin tương ứng với vai trò
+        Note over UI, User: Điều hướng trang theo Phân quyền (RBAC)
+        alt Vai trò ADMIN
+            UI->>UI: router.push('/admin')
+        else Vai trò DOCTOR
+            UI->>UI: router.push('/doctor')
+        else Vai trò PATIENT
+            UI->>UI: router.push('/dashboard')
         end
+        UI-->>User: Hiển thị giao diện cổng làm việc tương ứng
     end
 ```
 
@@ -152,7 +150,8 @@ sequenceDiagram
     else Xác thực Bác sĩ thành công
         API->>DB: prisma.$transaction([ Tạo MedicalRecord, Tạo PrescriptionItems, Cập nhật Appointment ])
         
-        critical Thực hiện giao dịch an toàn dữ liệu (Atomic Transaction)
+        rect rgb(240, 253, 244)
+            Note over DB: Giao dịch an toàn dữ liệu (Atomic Transaction)
             DB->>DB: 1. Tạo bản ghi MedicalRecord (symptoms, diagnosis, doctorId, patientId)
             DB->>DB: 2. Thêm từng phần tử thuốc vào bảng PrescriptionItem
             DB->>DB: 3. Cập nhật Appointment.status = 'COMPLETED'
