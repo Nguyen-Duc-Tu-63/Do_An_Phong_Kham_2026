@@ -83,7 +83,7 @@ export async function POST(request: Request) {
         role: 'DOCTOR',
         avatarUrl:
           avatarUrl?.trim() ||
-          'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=250&q=80',
+          '/images/default-avatar.svg',
       },
     });
 

@@ -92,7 +92,7 @@ async function main() {
       experienceYears: 16,
       bio: 'Chuyên gia đầu ngành về điều trị viêm xoang mạn tính, polyp mũi xoang và phẫu thuật nội soi Tai Mũi Họng.',
       consultationFee: 40.0,
-      avatarUrl: 'https://images.unsplash.com/photo-1622902046580-2b47f47f5471?auto=format&fit=crop&w=250&q=80',
+      avatarUrl: '/images/default-avatar.svg',
     },
     {
       fullName: 'ThS BS. Đặng Ngọc Anh',
@@ -103,7 +103,7 @@ async function main() {
       experienceYears: 11,
       bio: 'Bác sĩ chuyên sâu về tật khúc xạ học đường, kiểm soát cận thị tiến triển ở trẻ em và điều trị khô mắt.',
       consultationFee: 35.0,
-      avatarUrl: 'https://images.unsplash.com/photo-1594824813566-88855ce7890b?auto=format&fit=crop&w=250&q=80',
+      avatarUrl: '/images/default-avatar.svg',
     },
     {
       fullName: 'BS CKI. Bùi Tuấn Kiệt',
@@ -114,7 +114,7 @@ async function main() {
       experienceYears: 9,
       bio: 'Bác sĩ nha khoa thẩm mỹ tận tâm, chuyên sâu về cấy ghép Implant, chỉnh nha niềng răng và phục hình nụ cười.',
       consultationFee: 30.0,
-      avatarUrl: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=250&q=80',
+      avatarUrl: '/images/default-avatar.svg',
     },
     {
       fullName: 'TS BS. Hoàng Đức Thắng',
@@ -125,7 +125,7 @@ async function main() {
       experienceYears: 18,
       bio: 'Bác sĩ giàu kinh nghiệm trong chẩn đoán thoái hóa khớp gối, loãng xương, tiêm huyết tương giàu tiểu cầu (PRP).',
       consultationFee: 50.0,
-      avatarUrl: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=250&q=80',
+      avatarUrl: '/images/default-avatar.svg',
     },
     {
       fullName: 'BS CKI. Vũ Thùy Linh',
@@ -136,7 +136,7 @@ async function main() {
       experienceYears: 12,
       bio: 'Bác sĩ phụ khoa nhẹ nhàng, thấu hiểu tâm lý phụ nữ, chuyên theo dõi thai kỳ nguy cơ cao và tư vấn tiền sản.',
       consultationFee: 45.0,
-      avatarUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=250&q=80',
+      avatarUrl: '/images/default-avatar.svg',
     },
     {
       fullName: 'ThS BS. Trương Gia Bảo',
@@ -147,7 +147,7 @@ async function main() {
       experienceYears: 13,
       bio: 'Chuyên gia điều trị hội chứng ruột kích thích (IBS), trào ngược GERD, viêm gan siêu vi B/C và gan nhiễm mỡ.',
       consultationFee: 40.0,
-      avatarUrl: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=250&q=80',
+      avatarUrl: '/images/default-avatar.svg',
     },
     {
       fullName: 'BS CKI. Phan Thị Kim Ngân',
@@ -158,7 +158,7 @@ async function main() {
       experienceYears: 11,
       bio: 'Tư vấn điều trị rối loạn mỡ máu, xơ vữa động mạch và theo dõi sức khỏe tim mạch người cao tuổi.',
       consultationFee: 40.0,
-      avatarUrl: 'https://images.unsplash.com/photo-1527613426441-4da17471b66d?auto=format&fit=crop&w=250&q=80',
+      avatarUrl: '/images/default-avatar.svg',
     },
     {
       fullName: 'ThS BS. Đoàn Nhật Huy',
@@ -169,7 +169,7 @@ async function main() {
       experienceYears: 9,
       bio: 'Chuyên khám và điều trị viêm phế quản, hen suyễn trẻ em, tư vấn tiêm chủng và tăng cường miễn dịch cho bé.',
       consultationFee: 35.0,
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
+      avatarUrl: '/images/default-avatar.svg',
     },
   ];
 

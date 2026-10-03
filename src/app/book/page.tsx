@@ -438,7 +438,7 @@ function BookingFormContent() {
                                 <img
                                   src={
                                     doc.user.avatarUrl ||
-                                    'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=120&q=80'
+                                    '/images/default-avatar.svg'
                                   }
                                   alt={doc.user.fullName}
                                   className="w-12 h-12 rounded-xl object-cover"

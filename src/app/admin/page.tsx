@@ -1039,7 +1039,7 @@ export default function AdminPortalPage() {
                                   <img
                                     src={
                                       doc.avatarUrl ||
-                                      'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=100&q=80'
+                                      '/images/default-avatar.svg'
                                     }
                                     alt={doc.name}
                                     className="w-9 h-9 rounded-full object-cover border border-slate-200"
@@ -1402,7 +1402,7 @@ export default function AdminPortalPage() {
                                       key={doc.id}
                                       src={
                                         doc.user.avatarUrl ||
-                                        'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=100&q=80'
+                                        '/images/default-avatar.svg'
                                       }
                                       alt={doc.user.fullName}
                                       title={doc.user.fullName}
@@ -1496,7 +1496,7 @@ export default function AdminPortalPage() {
                               <img
                                 src={
                                   doc.user.avatarUrl ||
-                                  'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=150&q=80'
+                                  '/images/default-avatar.svg'
                                 }
                                 alt={doc.user.fullName}
                                 className="w-16 h-16 rounded-2xl object-cover border-2 border-emerald-100 shadow-xs shrink-0"

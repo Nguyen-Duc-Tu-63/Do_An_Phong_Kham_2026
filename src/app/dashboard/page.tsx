@@ -503,7 +503,7 @@ function PatientDashboardContent() {
                   src={
                     user?.avatarUrl ||
                     editAvatarUrl ||
-                    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80'
+                    '/images/default-avatar.svg'
                   }
                   alt={user?.fullName || patientInfo?.fullName || 'Bệnh nhân'}
                   className="w-16 h-16 rounded-2xl object-cover border-2 border-[#10b981] shadow-sm shrink-0"
@@ -660,7 +660,7 @@ function PatientDashboardContent() {
                     const doctorAvatar =
                       rec.doctor?.user?.avatarUrl ||
                       rec.appointment?.doctor?.user?.avatarUrl ||
-                      'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=200&q=80';
+                      '/images/default-avatar.svg';
 
                     return (
                       <div
@@ -860,7 +860,7 @@ function PatientDashboardContent() {
                       <img
                         src={
                           editAvatarUrl ||
-                          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=250&q=80'
+                          '/images/default-avatar.svg'
                         }
                         alt="Avatar Preview"
                         className="w-24 h-24 rounded-3xl object-cover border-4 border-[#10b981] shadow-md group-hover:opacity-90 transition-opacity"

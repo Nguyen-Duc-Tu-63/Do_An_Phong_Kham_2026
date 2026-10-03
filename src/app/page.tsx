@@ -275,7 +275,7 @@ export default function HomePage() {
                     <img
                       src={
                         doc.user.avatarUrl ||
-                        'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=300&q=80'
+                        '/images/default-avatar.svg'
                       }
                       alt={doc.user.fullName}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

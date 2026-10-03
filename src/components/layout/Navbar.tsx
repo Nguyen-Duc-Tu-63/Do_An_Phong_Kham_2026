@@ -229,7 +229,7 @@ export function Navbar() {
                 <img
                   src={
                     user.avatarUrl ||
-                    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80'
+                    '/images/default-avatar.svg'
                   }
                   alt={user.fullName}
                   className="w-8 h-8 rounded-full object-cover border border-emerald-400 shrink-0"
@@ -307,7 +307,7 @@ export function Navbar() {
               <img
                 src={
                   user.avatarUrl ||
-                  'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80'
+                  '/images/default-avatar.svg'
                 }
                 alt={user.fullName}
                 className="w-6 h-6 rounded-full object-cover border border-emerald-400 shrink-0"
@@ -337,7 +337,7 @@ export function Navbar() {
                 <img
                   src={
                     user.avatarUrl ||
-                    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80'
+                    '/images/default-avatar.svg'
                   }
                   alt={user.fullName}
                   className="w-10 h-10 rounded-full object-cover border-2 border-emerald-400"

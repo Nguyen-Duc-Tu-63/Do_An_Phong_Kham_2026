@@ -441,7 +441,7 @@ export function AIChatBot() {
                             >
                               <div className="flex items-center gap-2">
                                 <img
-                                  src={doc.avatarUrl || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=150&q=80'}
+                                  src={doc.avatarUrl || '/images/default-avatar.svg'}
                                   alt={doc.name}
                                   className="w-7 h-7 rounded-full object-cover border border-emerald-200"
                                 />
