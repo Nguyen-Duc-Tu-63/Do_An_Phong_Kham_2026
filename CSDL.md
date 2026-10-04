@@ -23,7 +23,12 @@
    - [4.2. DBeaver Community (Tiêu chuẩn công nghiệp đa CSDL)](#42-dbeaver-community)
    - [4.3. DataGrip - JetBrains (Công cụ chuyên nghiệp doanh nghiệp)](#43-datagrip-jetbrains)
    - [4.4. TablePlus (Giao diện Native hiệu năng cao)](#44-tableplus)
-   - [4.5. DB Browser for SQLite (Công cụ chuyên dụng cho file SQLite)](#45-db-browser-for-sqlite)
+   - [4.5. DB Browser for SQLite (Công Cụ Quản Trị & Thực Thi SQL Trực Tiếp)](#45-db-browser-for-sqlite-công-cụ-quản-trị--thực-thi-sql-trực-tiếp)
+     - [4.5.1. Bản Chất Kiến Trúc Desktop Native](#451-bản-chất-kiến-trúc-desktop-native--không-phụ-thuộc-máy-chủ)
+     - [4.5.2. Các Tính Năng Cốt Lõi Ứng Dụng Trong Dự Án](#452-các-tính-năng-cốt-lõi-được-ứng-dụng-thực-tế-trong-dự-án-phòng-khám-2026)
+     - [4.5.3. Hướng Dẫn Thao Tác Thủ Công (CRUD & Viết SQL Bằng Tay)](#453-hướng-dẫn-thao-tác-thủ-công-crud--viết-sql-bằng-tay)
+     - [4.5.4. Mô Hình Phối Hợp Giữa Prisma Studio & DB Browser for SQLite](#454-mô-hình-phối-hợp-giữa-prisma-studio-và-db-browser-for-sqlite)
+     - [4.5.5. Lưu Ý Về Sơ Đồ Thực Thể Quan Hệ (ERD)](#455-lưu-ý-về-sơ-đồ-thực-thể-quan-hệ-erd)
    - [4.6. pgAdmin 4 (Chuyên dụng cho PostgreSQL)](#46-pgadmin-4)
    - [4.7. Supabase Studio / Cloud Consoles](#47-supabase-studio--cloud-consoles)
    - [4.8. Bảng Ma Trận So Sánh Các Công Cụ & Mức Độ Khuyên Dùng](#48-bảng-ma-trận-so-sánh-các-công-cụ--mức-độ-khuyên-dùng)
@@ -147,6 +152,8 @@ Hệ thống quản lý vòng đời cấu trúc dữ liệu thông qua bộ cô
 | `npx prisma migrate deploy` | Áp dụng toàn bộ các file SQL migration chưa chạy lên CSDL Production (không chỉnh sửa cấu trúc ngầm). | **Môi trường Production CI/CD** |
 | `npx prisma generate` | Quét cấu trúc `schema.prisma` và biên dịch sinh ra bộ thư viện TypeScript Types an toàn tuyệt đối bên trong `node_modules/@prisma/client`. | **Mỗi khi thay đổi schema** |
 | `npx prisma db seed` | Chạy file kịch bản [`prisma/seed.ts`](file:///d:/PhongKham2026/prisma/seed.ts) để nạp tài khoản mẫu, danh mục 11 chuyên khoa, 32 bác sĩ và lịch hẹn mẫu. | **Khởi tạo dữ liệu ban đầu** |
+| `npx tsx prisma/add_data.ts` | Chạy script bổ sung chuyên khoa và bác sĩ mới vào CSDL đang chạy mà không làm mất dữ liệu hiện có. | **Mở rộng dữ liệu mẫu** |
+| `npx tsx prisma/run_sql.ts` | Thực thi các câu lệnh SQL tùy biến (SELECT / UPDATE / INSERT) trực tiếp qua Terminal. | **Kiểm thử truy vấn dòng lệnh** |
 | `npx prisma studio` | Khởi chạy máy chủ GUI Web cục bộ (mặc định cổng `5555`) để quản trị, duyệt và chỉnh sửa dữ liệu CSDL trực quan. | **Quản trị & Kiểm thử nhanh** |
 
 ---
@@ -539,13 +546,106 @@ Trong các đồ án môn học, đồ án tốt nghiệp hoặc đề tài nghi
 
 ---
 
-### 4.5. DB Browser for SQLite (SQLite Database Browser)
-- **Nhà phát triển:** SQLiteBrowser Team (Open-source).
-- **Mức độ sử dụng cho SQLite:** ⭐⭐⭐⭐ **(8.5/10 - Chuyên Dụng Số 1 Cho SQLite)**
-- **Đặc điểm & Ưu điểm:**
-  - **Chuyên biệt cho file `.db / .sqlite`:** Mở trực tiếp tập tin [`prisma/dev.db`](file:///d:/PhongKham2026/prisma/dev.db) của dự án mà không cần khởi động bất kỳ tiến trình dịch vụ máy chủ nào.
-  - **Portable & Siêu gọn nhẹ:** Dung lượng chỉ vài MB, có bản portable không cần cài đặt.
-  - **Kiểm tra Index & Query Log:** Dễ dàng kiểm tra các câu lệnh SQL mà Prisma ORM tạo ra dưới nền.
+### 4.5. DB Browser for SQLite (Công Cụ Quản Trị & Thực Thi SQL Trực Tiếp)
+- **Nhà phát triển:** SQLiteBrowser Team (Mã nguồn mở - Open-source).
+- **Mức độ sử dụng cho SQLite:** ⭐⭐⭐⭐⭐ **(9.6/10 - Công Cụ Quản Trị Desktop Số 1 Cho SQLite)**
+- **Vai trò trong dự án Phòng Khám 2026:** Được chính thức đưa vào sử dụng song hành cùng Prisma Studio để trực tiếp mở file [`prisma/dev.db`](file:///d:/PhongKham2026/prisma/dev.db), phục vụ viết và kiểm thử các câu lệnh SQL thuần (`SELECT`, `INSERT`, `UPDATE`, `DELETE`), đối soát ràng buộc dữ liệu và trích xuất báo cáo thống kê.
+
+#### 4.5.1. Bản Chất Kiến Trúc Desktop Native & Không Phụ Thuộc Máy Chủ
+- **Khác biệt cốt lõi:** Nếu như Prisma Studio là một ứng dụng Web chạy trên nền Node.js local server, thì **DB Browser for SQLite (DB4S)** là một phần mềm Native Desktop (viết bằng C++/Qt).
+- **Trực tiếp mở file vật lý:** DB4S tương tác trực tiếp với engine SQLite C-library để đọc/ghi tệp `prisma/dev.db` mà không cần thông qua bất kỳ cổng mạng (TCP/IP), tiến trình nền hay cấu hình người dùng/mật khẩu nào.
+- **Tiêu tốn tài nguyên tối thiểu:** Khởi động gần như tức thì, dung lượng gọn nhẹ (~20MB), có bản Portable giải nén chạy ngay, không gây nặng máy khi trình diễn đồ án.
+
+#### 4.5.2. Các Tính Năng Cốt Lõi Được Ứng Dụng Thực Tế Trong Dự Án Phòng Khám 2026
+1. **Duyệt & Biên Tập Dữ Liệu Tương Tác Dạng Lưới (Browse Data):**
+   - Cho phép chọn bất kỳ bảng nào (`User`, `Appointment`, `DoctorInfo`,...) và xem toàn bộ dữ liệu dưới dạng bảng tính tương tự Microsoft Excel.
+   - Hỗ trợ thao tác CRUD trực quan:
+     - **Sửa ô (Inline Edit):** Nhấp đúp chuột vào ô bất kỳ (ví dụ đổi số điện thoại của bệnh nhân, đổi trạng thái lịch hẹn) và bấm *Apply*.
+     - **Thêm dòng mới (New Record):** Bấm nút *New Record* để chèn nhanh một hàng mới vào cuối bảng.
+     - **Xóa bản ghi (Delete Record):** Chọn dòng và bấm *Delete Record*.
+   - Ô lọc nhanh (Filter) tích hợp ngay dưới từng tiêu đề cột: Gõ từ khóa để lọc dữ liệu tức thì (ví dụ gõ `PATIENT` ở cột `role`).
+
+2. **Môi Trường Soạn Thảo & Thực Thi Truy vấn SQL Chuyên Nghiệp (Execute SQL):**
+   - **Giải quyết hạn chế lớn nhất của Prisma Studio:** Prisma Studio chỉ cho lọc bằng nút bấm mà không có khung gõ câu lệnh SQL. DB4S cung cấp tab `Execute SQL` mạnh mẽ với đầy đủ tính năng tô màu cú pháp (Syntax Highlighting) và gợi ý từ khóa.
+   - Thực thi từng đoạn lệnh (bôi đen đoạn cần chạy) hoặc toàn bộ kịch bản bằng phím tắt **F5** hoặc nút **Play (▶️)**.
+   - Hiển thị bảng kết quả rõ ràng kèm thời gian thực thi (Execution Time), rất hữu ích cho sinh viên khi cần đo đếm hiệu năng truy vấn trong báo cáo đồ án.
+
+3. **Cơ Chế Kiểm Soát Giao Dịch An Toàn (Transaction Write / Revert Changes):**
+   - Khi chỉnh sửa dữ liệu hoặc chạy các câu lệnh làm biến đổi CSDL (`UPDATE`, `DELETE`, `INSERT`), dữ liệu chỉ được lưu tạm thời trên bộ nhớ RAM.
+   - **Nút "Write Changes" (Commit - `Ctrl + S`):** Chỉ khi người dùng bấm nút này thì các thay đổi mới thực sự ghi vĩnh viễn xuống file vật lý `dev.db` để ứng dụng web Next.js đọc được.
+   - **Nút "Revert Changes" (Rollback):** Nếu lỡ tay xóa nhầm hoặc cập nhật sai điều kiện `WHERE`, chỉ cần bấm *Revert Changes* là CSDL lập tức khôi phục về trạng thái an toàn ban đầu.
+
+4. **Trích Xuất & Sao Lưu Dữ Liệu Đa Dạng (Export / Import):**
+   - Xuất dữ liệu các bảng sang định dạng `.csv` hoặc xuất toàn bộ Database thành file kịch bản SQL Dump (`.sql`).
+   - Rất thuận tiện để tạo file đính kèm phục vụ nộp báo cáo hoặc chuyển giao CSDL cho các thành viên khác trong nhóm.
+
+#### 4.5.3. Hướng Dẫn Thao Tác Thủ Công (CRUD & Viết SQL Bằng Tay)
+Dưới đây là các kịch bản thực tế đã được chuẩn hóa để sinh viên thực hiện thao tác trên DB4S:
+
+* **Kịch bản 1: Truy vấn lọc danh sách toàn bộ Bệnh nhân trong hệ thống:**
+  ```sql
+  SELECT id, fullName, email, phone, createdAt 
+  FROM User 
+  WHERE role = 'PATIENT' 
+  ORDER BY createdAt DESC;
+  ```
+
+* **Kịch bản 2: Tìm kiếm lịch hẹn khám trong ngày kèm thông tin bệnh nhân và chuyên khoa (Phép JOIN):**
+  ```sql
+  SELECT 
+      a.id AS maLichHen,
+      u.fullName AS tenBenhNhan,
+      u.phone AS soDienThoai,
+      s.name AS chuyenKhoa,
+      a.appointmentDate AS ngayKham,
+      a.appointmentTime AS gioKham,
+      a.status AS trangThai
+  FROM Appointment a
+  JOIN User u ON a.patientId = u.id
+  JOIN Specialty s ON a.specialtyId = s.id
+  WHERE a.status = 'PENDING'
+  ORDER BY a.appointmentDate ASC;
+  ```
+
+* **Kịch bản 3: Duyệt xác nhận lịch hẹn bằng tay (Cập nhật trạng thái):**
+  ```sql
+  UPDATE Appointment 
+  SET status = 'CONFIRMED' 
+  WHERE id = 'ma-id-lich-hen-can-duyet';
+  ```
+
+* **Kịch bản 4: Xóa an toàn một thông báo cũ:**
+  ```sql
+  DELETE FROM Notification 
+  WHERE isRead = 1 AND createdAt < DATE('now', '-30 days');
+  ```
+
+#### 4.5.4. Mô Hình Phối Hợp Giữa Prisma Studio và DB Browser for SQLite
+Trong dự án này, hai công cụ không triệt tiêu lẫn nhau mà bổ trợ hoàn hảo cho nhau theo mô hình phân công nhiệm vụ:
+
+```
++------------------------------------------------------------------------------------+
+|                MÔ HÌNH PHỐI HỢP CÔNG CỤ QUẢN TRỊ CSDL TRONG DỰ ÁN                  |
++-----------------------------------------+------------------------------------------+
+|          PRISMA STUDIO (Web GUI)        |       DB BROWSER FOR SQLITE (Desktop)    |
+|          (http://localhost:5555)        |       (Ứng dụng cài đặt máy tính)        |
++-----------------------------------------+------------------------------------------+
+| * Duyệt nhanh quan hệ liên kết 1-click  | * Soạn thảo & thực thi câu lệnh SQL thuần|
+|   (Bấm xem trực tiếp quan hệ 1:1, 1:N)  |   (SELECT, UPDATE, DELETE, JOIN, GROUP BY|
+| * Kiểm thử luồng Web theo thời gian thực| * Thao tác dữ liệu độc lập không cần     |
+| * Phù hợp demo trực quan với người dùng |   khởi động server Node.js / Next.js     |
+| * Tự động kiểm tra Schema Validation    | * Kiểm tra chi tiết cấu trúc B-Tree,     |
+|                                         |   chỉ mục (Indexes) và câu lệnh DDL      |
+|                                         | * Trích xuất báo cáo thống kê & Dump SQL |
++-----------------------------------------+------------------------------------------+
+```
+
+#### 4.5.5. Lưu Ý Về Sơ Đồ Thực Thể Quan Hệ (ERD)
+- **Hạn chế:** DB Browser for SQLite được thiết kế tối giản, tập trung vào dữ liệu và câu lệnh nên **không tích hợp công cụ tự động vẽ sơ đồ ERD**.
+- **Giải pháp của dự án:** 
+  1. Sử dụng tài liệu thiết kế chuẩn hóa sẵn có tại [`ERD_DESIGN.md`](file:///d:/PhongKham2026/ERD_DESIGN.md) với định dạng biểu đồ **Mermaid (Crow's Foot Notation)**.
+  2. Sao chép mã nguồn biểu đồ dán vào công cụ trực tuyến **[mermaid.live](https://mermaid.live/)** để xuất ra tệp ảnh PNG/SVG độ nét cao chèn vào báo cáo Word.
+  3. Hoặc sử dụng phần mềm **DBeaver Community** mở file `dev.db` để tự động sinh sơ đồ quan hệ dạng khối kéo thả khi cần trình bày đa dạng góc nhìn.
 
 ---
 
