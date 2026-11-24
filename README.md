@@ -129,6 +129,114 @@ Hệ thống phân quyền 3 vai trò chính dựa trên `Role`:
 
 ---
 
+## 🩺 Các Chức Năng Cốt Lõi Theo Từng Phân Hệ (Core Features)
+
+Hệ thống được thiết kế theo mô hình **RBAC (Role-Based Access Control)** với **3 phân hệ người dùng chính** liên kết chặt chẽ từ khâu tư vấn, đặt lịch, điều phối, khám bệnh cho tới phát hành đơn thuốc điện tử:
+
+### 1. Phân Hệ Bệnh Nhân & Khách Truy Cập (`PATIENT` / `GUEST`)
+
+#### 1.1. Trang Chủ & Khám Phá Dịch Vụ Y Tế (`src/app/page.tsx`)
+* **Danh mục 10 Chuyên khoa nổi bật:** Hiển thị trực quan thông tin, biểu tượng và mô tả của 10 chuyên khoa (Tim Mạch, Nhi, Da Liễu, Nội Tổng Quát, Tai Mũi Họng, Mắt, Răng Hàm Mặt, Cơ Xương Khớp, Sản Phụ Khoa, Tiêu Hóa - Gan Mật), cho phép chọn đặt lịch trực tiếp theo từng khoa.
+* **Đội ngũ Bác sĩ tiêu biểu:** Tự động lọc và giới thiệu các Bác sĩ đầu ngành có số năm kinh nghiệm cao nhất kèm học vị (ThS, BS CKI, BS CKII, TS), tiểu sử chuyên môn, chi phí khám và nút đặt khám đích danh với bác sĩ đó.
+
+#### 1.2. Trợ Lý Bác Sĩ Ảo AI — CareBot 24/7 (`src/components/chat/AIChatBot.tsx`, `src/app/api/ai-chat/route.ts`)
+* **Phân tích triệu chứng & Phân luồng chuyên khoa:** Bệnh nhân nhập triệu chứng bằng tiếng Việt (có dấu hoặc không dấu), CareBot tự động phân tích từ khóa triệu chứng để gợi ý chính xác **Chuyên khoa cần khám**, giải thích nguyên nhân sơ bộ và đưa ra lời khuyên chăm sóc tại nhà.
+* **Gợi ý Bác sĩ & Đặt lịch 1 chạm:** Ngay trong khung chat, CareBot hiển thị thẻ Chuyên khoa và danh sách 3 Bác sĩ phụ trách kèm nút **"Đặt Lịch Khám Ngay"** chuyển thẳng đến bước đặt hẹn đã điền sẵn khoa/bác sĩ.
+* **Cảnh báo Y tế Khẩn cấp (Red Flags Detection):** Tự động phát hiện các từ khóa nguy kịch (đột quỵ, khó thở dữ dội, hôn mê, co giật, nôn ra máu...) để bật hộp cảnh báo đỏ khẩn cấp kèm nút gọi nhanh cấp cứu `115` và Hotline phòng khám.
+
+#### 1.3. Đặt Lịch Khám Trực Tuyến 3 Bước Thông Minh (`src/app/book/page.tsx`)
+* **Bước 1 — Chọn Chuyên khoa & Hình thức xếp Bác sĩ:** Hỗ trợ **2 luồng đặt lịch linh hoạt**:
+  1. **Tự chọn Bác sĩ (`SELF_SELECTED`):** Bệnh nhân chủ động chọn bác sĩ mong muốn; lịch hẹn sau khi đặt sẽ được chuyển ngay sang trạng thái **`CONFIRMED` (Đã xác nhận & Chờ khám)**.
+  2. **Hệ thống tự động xếp (`AUTO_ASSIGN`):** Phù hợp khi bệnh nhân không biết chọn bác sĩ nào; lịch hẹn sẽ mang trạng thái **`PENDING` (Chờ sắp xếp bác sĩ)** để Quản trị viên/Lễ tân điều phối bác sĩ đang rảnh.
+* **Bước 2 — Chọn Ngày & Khung giờ khám theo thời gian thực:** Tự động kiểm tra lịch trực của bác sĩ và loại trừ các khung giờ (slot 30 phút buổi Sáng / Chiều) đã có người đặt để chống trùng lịch.
+* **Bước 3 — Xác nhận thông tin:** Tự động điền Họ tên, SĐT, Email nếu bệnh nhân đã đăng nhập, hoặc cho phép khách vãng lai đặt nhanh bằng Số điện thoại (tự động tạo/liên kết hồ sơ bệnh nhân).
+
+#### 1.4. Cổng Hồ Sơ Y Tế, Bệnh Án & Đơn Thuốc Điện Tử (`src/app/dashboard/page.tsx`)
+* **Tra cứu kép (Tài khoản hoặc Số điện thoại):** Bệnh nhân có thể đăng nhập hoặc chỉ cần nhập **Số điện thoại** đã đặt lịch để tra cứu toàn bộ lịch sử khám.
+* **Quản lý Lịch hẹn sắp tới:** Xem trạng thái lịch hẹn theo thời gian thực (`Chờ sắp xếp bác sĩ`, `Đã xác nhận`, `Đang chờ đổi bác sĩ`, `Đã hoàn thành`), hỗ trợ **Hủy lịch hẹn** trực tuyến khi có việc bận.
+* **Xem Lịch sử Khám & Chẩn đoán Lâm sàng:** Xem chi tiết hồ sơ bệnh án sau mỗi lần khám gồm: Bác sĩ điều trị, Triệu chứng lâm sàng, Kết luận chẩn đoán và Lời dặn dò của bác sĩ.
+* **Đơn Thuốc Điện Tử & In PDF (`window.print`):** Xem danh mục thuốc được kê (Tên thuốc, Hàm lượng, Liều dùng, Thời gian uống) và mở **Modal Phiếu Đơn Thuốc Điện Tử chuẩn Y khoa** để in hoặc lưu thành file PDF.
+* **Quản lý Hồ sơ cá nhân & Bảo mật:** Cập nhật Họ tên, SĐT, Email, đổi mật khẩu bảo mật và thay đổi **Ảnh đại diện (Avatar)** (tải ảnh trực tiếp từ máy tính, chọn bộ Avatar mẫu hoặc dán URL).
+
+---
+
+### 2. Phân Hệ Bác Sĩ Chuyên Khoa (`DOCTOR`)
+
+Giao diện bàn làm việc chuyên biệt (`src/app/doctor/page.tsx`) giúp bác sĩ tập trung hoàn toàn vào chuyên môn khám chữa bệnh:
+
+#### 2.1. Quản Lý Hàng Chờ Khám & Thống Kê Ca Trực
+* **Bảng điều khiển ca trực trong ngày:** Hiển thị 3 chỉ số trực quan gồm: *Tổng số bệnh nhân chờ khám*, *Số ca khám hôm nay* và *Tổng số ca đã hoàn thành*.
+* **Bộ lọc hàng chờ thông minh:** Phân loại danh sách bệnh nhân chờ khám theo **Hôm nay**, **Lịch sắp tới** hoặc **Tất cả**, nổi bật các ca khám trong ngày kèm triệu chứng bệnh nhân đã khai báo trước.
+
+#### 2.2. Khám Bệnh, Lập Hồ Sơ Bệnh Án & Kê Đơn Thuốc Điện Tử (`src/app/api/medical-records/route.ts`)
+* **Biểu mẫu Khám lâm sàng:** Khi bấm **"Bắt Đầu Khám & Kê Đơn"**, hệ thống tự động nạp sẵn triệu chứng ban đầu của bệnh nhân; bác sĩ ghi nhận **Triệu chứng thực tế**, **Chẩn đoán xác định** và **Lời khuyên / Dặn dò tái khám**.
+* **Kê đơn thuốc động nhiều dòng (Dynamic Prescription Builder):** Bác sĩ có thể thêm/xóa không giới hạn số lượng thuốc trong đơn với đầy đủ các trường: *Tên thuốc*, *Hàm lượng (vd: 500mg)*, *Cách dùng/Tần suất* và *Thời gian điều trị*.
+* **Đồng bộ trạng thái tức thì:** Ngay khi bác sĩ bấm hoàn tất, lịch hẹn tự động chuyển sang **`COMPLETED`**, đồng thời bệnh án và đơn thuốc xuất hiện ngay lập tức trên cổng hồ sơ của bệnh nhân.
+
+#### 2.3. Báo Bận Đột Xuất & Kích Hoạt Điều Phối Khẩn Cấp (`src/app/api/doctor/urgent-unavailability/route.ts`)
+* **Nút "Báo Đột Xuất Bận Khám":** Khi bác sĩ có lịch họp khẩn, cấp cứu hoặc sự cố đột xuất không thể tiếp nhận các ca chờ khám trong ngày, bác sĩ nhập lý do báo bận.
+* **Tự động chuyển trạng thái & Phát cảnh báo:** Toàn bộ lịch hẹn bị ảnh hưởng của bác sĩ đó sẽ tự động chuyển sang trạng thái **`NEEDS_REASSIGNMENT` (Cần đổi bác sĩ gấp)** và bắn thông báo khẩn (`URGENT_DOCTOR_BUSY`) sang màn hình của Quản trị viên / Lễ tân.
+
+---
+
+### 3. Phân Hệ Quản Trị Viên & Lễ Tân (`ADMIN`)
+
+Trung tâm chỉ huy và vận hành toàn bộ phòng khám (`src/app/admin/page.tsx`) với 5 tab chức năng chuyên sâu:
+
+#### 3.1. Dashboard Thống Kê Tổng Quan & Biểu Đồ Phân Tích (`src/app/api/admin/stats/route.ts`)
+* **Hệ thống thẻ chỉ số KPI thời gian thực:** Theo dõi *Lịch khám hôm nay*, *Số ca đã khám xong & Tỷ lệ hoàn thành (%)*, *Số lịch chờ phân bác sĩ*, *Số ca cảnh báo đỏ cần đổi bác sĩ gấp*, và *Doanh thu khám bệnh (Hôm nay & Tổng tích lũy)*.
+* **Biểu đồ trực quan hóa dữ liệu (Recharts):**
+  * Biểu đồ xu hướng lượng đặt khám & hoàn thành theo chuỗi thời gian (**7 ngày** hoặc **14 ngày**).
+  * Biểu đồ tròn (**PieChart**) tỷ lệ phân bổ trạng thái lịch hẹn.
+  * Biểu đồ cột (**BarChart**) thống kê số lượng ca khám và doanh thu theo từng Chuyên khoa và hiệu suất làm việc của từng Bác sĩ.
+
+#### 3.2. Quản Lý & Điều Phối Tổng Hợp Lịch Hẹn (`src/app/api/appointments/assign/route.ts`)
+* **Tra cứu & Lọc đa chiều:** Lọc danh sách toàn bộ lịch hẹn trong hệ thống theo *Trạng thái*, *Chuyên khoa* và *Bác sĩ phụ trách*.
+* **Điều phối Bác sĩ cho lịch đặt tự động (`AUTO_ASSIGN`):** Đối với các lịch hẹn bệnh nhân chọn "Hệ thống tự động xếp" (`PENDING`), Admin mở hộp thoại chọn bác sĩ cùng chuyên khoa đang còn lịch trống để phân công và xác nhận lịch (`CONFIRMED`).
+
+#### 3.3. Xử Lý Khủng Hoảng — Đổi Bác Sĩ Khẩn Cấp (`src/app/api/appointments/reassign/route.ts`)
+* **Tab "Xử Lý Đổi Lịch Khẩn" có cảnh báo nhấp nháy:** Tập hợp toàn bộ các ca khám bị gián đoạn do bác sĩ báo bận đột xuất (`NEEDS_REASSIGNMENT`).
+* **Chỉ định Bác sĩ thay thế & Dời khung giờ:** Cho phép Lễ tân chọn nhanh một bác sĩ khác cùng chuyên khoa để thế chỗ (hoặc điều chỉnh lại ngày/giờ khám nếu cần) và tự động gửi thông báo cập nhật cho bệnh nhân.
+
+#### 3.4. Quản Lý Danh Mục Chuyên Khoa — Full CRUD (`src/app/api/specialties/route.ts`)
+* Tìm kiếm, **Thêm mới**, **Chỉnh sửa** (Tên khoa, Mô tả chuyên môn, Biểu tượng y tế) và **Xóa** chuyên khoa (kèm cơ chế dọn dẹp an toàn dữ liệu liên quan), đồng thời thống kê số lượng bác sĩ và tổng số ca khám của từng khoa.
+
+#### 3.5. Quản Lý Đội Ngũ Bác Sĩ — Full CRUD (`src/app/api/doctors/route.ts`)
+* Tìm kiếm bác sĩ theo tên, email, SĐT, học vị và lọc theo chuyên khoa.
+* **Thêm bác sĩ mới** (tự động tạo tài khoản đăng nhập `DOCTOR`, khởi tạo hồ sơ `DoctorInfo` và tự động sinh lịch làm việc tiêu chuẩn cả tuần `DoctorSchedule`), **Chỉnh sửa thông tin/Giá khám/Tiểu sử** và **Xóa hồ sơ bác sĩ**.
+
+---
+
+### 4. Sơ Đồ Quy Trình Nghiệp Vụ Khép Kín Giữa 3 Vai Trò
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor P as Bệnh Nhân (Patient)
+    participant AI as CareBot AI / Hệ Thống
+    actor A as Quản Trị / Lễ Tân (Admin)
+    actor D as Bác Sĩ (Doctor)
+
+    P->>AI: Nhập triệu chứng bệnh vào CareBot
+    AI-->>P: Gợi ý Chuyên khoa + Bác sĩ phù hợp
+    P->>AI: Đặt lịch khám (Tự chọn BS hoặc Tự động xếp)
+    alt Tự động xếp (AUTO_ASSIGN -> PENDING)
+        A->>AI: Phân công Bác sĩ phù hợp cho ca khám
+        AI-->>D: Đưa lịch hẹn (CONFIRMED) vào hàng chờ Bác sĩ
+    else Tự chọn Bác sĩ (SELF_SELECTED -> CONFIRMED)
+        AI-->>D: Vào thẳng hàng chờ khám của Bác sĩ
+    end
+    opt Bác sĩ đột xuất bận (Urgent Unavailability)
+        D->>AI: Báo bận đột xuất + Nhập lý do
+        AI-->>A: Bật cảnh báo đỏ (NEEDS_REASSIGNMENT)
+        A->>AI: Điều phối chuyển sang Bác sĩ khác cùng khoa
+    end
+    D->>AI: Thăm khám, nhập Chẩn đoán & Kê đơn thuốc điện tử
+    AI-->>P: Hoàn tất (COMPLETED) - Xem Bệnh án & In Đơn thuốc PDF
+```
+
+---
+
 ## 📁 Cấu Trúc Mã Nguồn
 
 ```text
