@@ -4,38 +4,92 @@ Hệ thống quản lý phòng khám hiện đại, tối ưu cho việc đặt 
 
 ---
 
-## 🚀 Các Công Nghệ Được Áp Dụng
+## 🚀 Các Công Nghệ Được Áp Dụng (Chi Tiết & Đầy Đủ)
 
-### 1. Nền Tảng & Framework Cốt Lõi (Core Stack)
-* **[Next.js 14 (v14.2.5)](https://nextjs.org/)**: Framework React full-stack hiện đại với App Router (`src/app`), Server Components và Server API Routes.
-* **[React 18 (v18.3.1)](https://react.dev/)**: Thư viện UI cốt lõi cung cấp cơ chế render hiệu năng cao.
-* **[TypeScript (v5.5.4)](https://www.typescriptlang.org/)**: Đảm bảo **Type Safety** toàn diện từ Frontend UI, Backend API Routes cho đến các truy vấn CSDL Prisma.
+### 1. Nền Tảng Cốt Lõi & Ngôn Ngữ Lập Trình (Core Framework & Language)
 
-### 2. Cơ Sở Dữ Liệu & ORM (Database & Persistence Layer)
-* **[Prisma ORM (v5.18.0)](https://www.prisma.io/)**: ORM thế hệ mới cho TypeScript, quản lý migration, sinh Prisma Client ngắt lỗi compile-time.
-* **[SQLite](https://www.sqlite.org/)**: CSDL quan hệ dạng tệp tin cục bộ (`prisma/dev.db`), nhẹ, gọn và dễ dàng triển khai thử nghiệm.
-* **Prisma Studio**: Công cụ UI quản trị cơ sở dữ liệu (`npx prisma studio`).
-* **[tsx (v4.17.0)](https://github.com/privatenumber/tsx)**: Công cụ thực thi TypeScript runner cho script khởi tạo dữ liệu mẫu (`prisma/seed.ts`).
+| Công nghệ | Phiên bản | Vai trò & Ứng dụng thực tế trong dự án | File tiêu biểu |
+| :--- | :--- | :--- | :--- |
+| **[Next.js (App Router)](https://nextjs.org/)** | `14.2.5` | Framework Full-stack chủ đạo của dự án. Quản lý định tuyến theo thư mục (`src/app`), kết hợp **Server Components** và **Client Components** (`'use client'`), đồng thời tích hợp sẵn **Server API Routes** làm Backend mà không cần tách server Express riêng. | `next.config.mjs`, `src/app/layout.tsx` |
+| **[React](https://react.dev/) & React DOM** | `18.3.1` | Thư viện cốt lõi xây dựng giao diện hướng thành phần (Component-based UI). Sử dụng các React Hooks (`useState`, `useEffect`, `useMemo`, `useRef`) để quản lý trạng thái đặt lịch, giỏ thuốc, bộ lọc tìm kiếm và chatbot. | `src/app/page.tsx` |
+| **[TypeScript](https://www.typescriptlang.org/)** | `5.5.4` | Ngôn ngữ chính (`strict: true`). Đảm bảo **Type Safety** xuyên suốt từ giao diện, dữ liệu gửi qua API cho tới các bảng truy vấn trong CSDL, giúp phát hiện lỗi ngay lúc biên dịch (Compile-time). | `tsconfig.json`, `src/types/index.ts` |
+| **Node.js Runtime** | `v20+` | Môi trường thực thi phía máy chủ (Server-side runtime) cho Next.js API Routes, Prisma ORM và các tác vụ đọc/ghi file CSDL. | `package.json` |
 
-### 3. Giao Diện & Thiết Kế (UI & Styling System)
-* **[Tailwind CSS (v3.4.7)](https://tailwindcss.com/)**: Utility-first CSS framework giúp thiết kế responsive, tùy biến linh hoạt.
-* **[PostCSS (v8.4.40)](https://postcss.org/) & Autoprefixer**: Tiền xử lý CSS tương thích trình duyệt.
-* **[Lucide React (v0.427.0)](https://lucide.dev/)**: Bộ biểu tượng SVG vector hiện đại, đồng bộ.
-* **clsx & tailwind-merge**: Tiện ích xử lý và gộp CSS class động cho các UI component.
+### 2. Giao Diện, Thiết Kế & Trực Quan Hóa Dữ Liệu (UI, Styling & Data Visualization)
 
-### 4. Quản Lý Form & Kiểm Định Dữ Liệu (Form Handling & Validation)
-* **[React Hook Form (v7.52.2)](https://react-hook-form.com/)**: Quản lý trạng thái form hiệu năng cao, tối ưu re-render.
-* **[Zod (v3.23.8)](https://zod.dev/)**: Khai báo schema validation dữ liệu đồng bộ giữa Client Form và Server API.
-* **@hookform/resolvers**: Kết nối Zod Schema với React Hook Form.
+| Công nghệ | Phiên bản | Vai trò & Ứng dụng thực tế trong dự án | File tiêu biểu |
+| :--- | :--- | :--- | :--- |
+| **[Tailwind CSS](https://tailwindcss.com/)** | `3.4.7` | Utility-first CSS Framework dùng để thiết kế toàn bộ giao diện theo tông màu y tế (`brand` / `clinic` xanh ngọc `#4fc3a1`, `#10b981`) và tối ưu hiển thị đa thiết bị (Responsive Mobile / Tablet / Desktop). | `tailwind.config.ts`, `src/app/globals.css` |
+| **[PostCSS](https://postcss.org/) & Autoprefixer** | `8.4.40` / `10.4.20` | Công cụ biên dịch CSS và tự động thêm tiền tố (`-webkit-`, `-moz-`) đảm bảo tương thích trên mọi trình duyệt. | `postcss.config.mjs` |
+| **[Lucide React](https://lucide.dev/)** | `0.427.0` | Bộ thư viện icon vector SVG y tế hiện đại (`HeartPulse`, `Stethoscope`, `Calendar`, `Baby`, `Shield`, `FileText`...) dùng trên toàn hệ thống. | `src/components/layout/Navbar.tsx` |
+| **[Recharts](https://recharts.org/)** | `2.12.7` | Thư viện vẽ biểu đồ thống kê trực quan trong phân hệ **Admin** (biểu đồ doanh thu, số ca khám theo chuyên khoa, tỷ lệ trạng thái lịch hẹn). | `src/app/admin/page.tsx` |
+| **[Sonner](https://sonner.emilkowal.ski/)** | `1.5.0` | Thư viện hiển thị thông báo nổi (**Toast Notifications**) mượt mà khi người dùng đặt lịch thành công, bác sĩ lưu bệnh án hoặc báo lỗi đăng nhập. | `src/app/layout.tsx` |
+| **clsx & tailwind-merge** | `2.1.1` / `2.4.0` | Tiện ích gộp class CSS động thông minh (hàm `cn()`), giúp tránh xung đột class Tailwind khi xây dựng hệ thống Design System (`Button`, `Card`, `Badge`, `Modal`, `Input`). | `src/lib/utils.ts` |
 
-### 5. Xác Thực & Bảo Mật (Authentication & Security)
-* **[Bcrypt.js (v2.4.3)](https://github.com/dcodeIO/bcrypt.js)**: Mã hóa mật khẩu an toàn với Salt (Password Hashing).
-* **Cookie-Based Session Auth**: Quản lý phiên đăng nhập an toàn qua HTTP Cookie (`phongkham_session_user`), xử lý đọc session trực tiếp từ Server Side qua Next.js `cookies()`.
+### 3. Quản Lý Biểu Mẫu & Kiểm Định Dữ Liệu (Form Handling & Schema Validation)
 
-### 6. Hiển Thị Dữ Liệu & Tiện Ích Trải Nghiệm (Data Visualization & UX Utilities)
-* **[Recharts (v2.12.7)](https://recharts.org/)**: Thư viện vẽ biểu đồ thống kê chuyên khoa, lượt khám và doanh thu.
-* **[Sonner (v1.5.0)](https://sonner.emilkowal.ski/)**: Thư viện hiển thị thông báo Toast mượt mà.
-* **[date-fns (v3.6.0)](https://date-fns.org/)**: Tiện ích xử lý và định dạng ngày tháng.
+| Công nghệ | Phiên bản | Vai trò & Ứng dụng thực tế trong dự án | File tiêu biểu |
+| :--- | :--- | :--- | :--- |
+| **[React Hook Form](https://react-hook-form.com/)** | `7.52.2` | Quản lý trạng thái các biểu mẫu phức tạp (Form Đặt lịch 3 bước, Form Khám bệnh & Kê đơn nhiều dòng thuốc, Form Đăng ký/Đăng nhập) với hiệu năng cao, hạn chế re-render. | `src/app/book/page.tsx`, `src/app/doctor/page.tsx` |
+| **[Zod](https://zod.dev/)** | `3.23.8` | Khai báo Schema kiểm định dữ liệu chặt chẽ (ràng buộc định dạng số điện thoại Việt Nam 10 số, ngày khám không ở quá khứ, mật khẩu tối thiểu 6 ký tự, thông tin đơn thuốc...). | `src/lib/validations.ts` |
+| **@hookform/resolvers** | `3.9.0` | Cầu nối tích hợp trực tiếp **Zod Schema** vào **React Hook Form** để tự động bắt lỗi và hiển thị thông báo tiếng Việt trên giao diện. | `src/app/register/page.tsx` |
+| **[date-fns](https://date-fns.org/)** | `3.6.0` | Thư viện xử lý, so sánh và định dạng ngày giờ khám bệnh, tính toán lịch trực theo thứ trong tuần của bác sĩ. | `src/lib/utils.ts` |
+
+### 4. Kiến Trúc Backend, API & Xử Lý Nghiệp Vụ (Backend & Business Logic)
+
+| Công nghệ / Kỹ thuật | Chi tiết triển khai trong dự án | File tiêu biểu |
+| :--- | :--- | :--- |
+| **Next.js RESTful API Routes** | Xây dựng hệ thống các endpoints chuẩn REST (`GET`, `POST`, `PUT`, `DELETE`) trả về dữ liệu `JSON` qua `NextResponse`. Bao gồm: `/api/auth/*`, `/api/appointments`, `/api/consultations`, `/api/doctors`, `/api/specialties`, `/api/notifications`, `/api/stats`, `/api/ai-chat`. | `src/app/api/appointments/route.ts`, `src/app/api/consultations/route.ts` |
+| **Native Fetch API** | Giao tiếp bất đồng bộ (`async/await`) giữa Client và Server mà không cần cài thêm thư viện ngoài như Axios, tối ưu dung lượng bundle. | `src/app/dashboard/page.tsx` |
+| **CareBot — Trợ lý AI Phân luồng Y tế** | Hệ thống Chatbot thông minh xử lý ngôn ngữ tự nhiên tiếng Việt (khử dấu, so khớp từ khóa triệu chứng có trọng số - Weighted Rule-based NLP), phát hiện dấu hiệu cấp cứu khẩn cấp (Red Flags) và tự động truy vấn CSDL gợi ý đúng Chuyên khoa + Bác sĩ tiêu biểu. | `src/components/chat/AIChatBot.tsx`, `src/app/api/ai-chat/route.ts` |
+
+### 5. Cơ Sở Dữ Liệu & Tầng ORM (Database & Persistence Layer)
+
+| Công nghệ | Phiên bản | Vai trò & Ứng dụng thực tế trong dự án | File tiêu biểu |
+| :--- | :--- | :--- | :--- |
+| **[SQLite 3](https://www.sqlite.org/)** | Embedded DB | Hệ quản trị cơ sở dữ liệu quan hệ nhúng lưu trữ trực tiếp trong tệp nhị phân `prisma/dev.db`. Không cần cài đặt dịch vụ chạy nền, tốc độ đọc/ghi I/O cực nhanh và dễ dàng sao lưu/di chuyển toàn bộ dự án. Quản lý **8 bảng quan hệ**: `User`, `Specialty`, `DoctorInfo`, `DoctorSchedule`, `Appointment`, `MedicalRecord`, `Prescription`, `Notification`. | `prisma/schema.prisma` |
+| **[Prisma ORM](https://www.prisma.io/) & Prisma Client** | `5.18.0` | Tầng ánh xạ đối tượng - quan hệ (Object-Relational Mapping). Tự động sinh bộ hàm truy vấn Type-safe, chống 100% lỗi bảo mật **SQL Injection** và áp dụng **Singleton Pattern** để tránh nghẽn kết nối khi Hot-Reload. | `src/database/prisma.ts`, `src/lib/prisma.ts` |
+| **[tsx (TypeScript Execute)](https://github.com/privatenumber/tsx)** | `4.17.0` | Công cụ chạy trực tiếp script khởi tạo dữ liệu mẫu (`prisma/seed.ts`) bằng TypeScript để nạp sẵn 10 Chuyên khoa, 30 Bác sĩ, Lịch làm việc và Bệnh nhân mẫu. | `prisma/seed.ts` |
+| **Prisma Studio & DB Browser for SQLite** | Công cụ GUI | Giao diện trực quan (Web GUI ở cổng `5555` với lệnh `npm run db:studio` và phần mềm Desktop) giúp xem, lọc, sửa dữ liệu và thực thi truy vấn SQL trực tiếp. | `KTHT.md` |
+
+### 6. Xác Thực, Bảo Mật & Phân Quyền (Authentication, Security & RBAC)
+
+| Công nghệ / Cơ chế | Phiên bản | Vai trò & Ứng dụng thực tế trong dự án | File tiêu biểu |
+| :--- | :--- | :--- | :--- |
+| **[Bcrypt.js (`bcryptjs`)](https://github.com/dcodeIO/bcrypt.js)** | `2.4.3` | Mã hóa mật khẩu người dùng một chiều kèm chuỗi ngẫu nhiên (**Salt hashing** với `saltRounds = 10`) trước khi lưu vào bảng `User` và đối chiếu khi đăng nhập. | `src/app/api/auth/login/route.ts`, `src/app/api/auth/register/route.ts` |
+| **HTTP Cookie Session (`next/headers`)** | Native Next.js | Quản lý phiên đăng nhập qua Cookie định danh `phongkham_session_user`, đọc và xác thực phiên trực tiếp ở phía Server. | `src/backend/auth/session.ts` |
+| **Phân quyền RBAC (Role-Based Access Control)** | 3 Vai trò | Kiểm soát quyền truy cập nghiêm ngặt theo 3 vai trò: **`PATIENT`** (Đặt lịch, xem hồ sơ & đơn thuốc), **`DOCTOR`** (Xem ca trực, khám bệnh, kê đơn, báo bận), **`ADMIN`** (Thống kê tổng quan, điều phối/xếp bác sĩ, quản lý danh mục khoa & bác sĩ). | `src/backend/auth/session.ts` |
+
+### 7. Sơ Đồ Phối Hợp Công Nghệ (Tech Stack Flow)
+
+```mermaid
+flowchart TD
+    subgraph Client ["1. Tầng Giao Diện (Browser / Client)"]
+        UI["React 18 + Next.js 14 App Router"]
+        Style["Tailwind CSS + Lucide Icons + Recharts"]
+        Form["React Hook Form + Zod Validation"]
+    end
+
+    subgraph Server ["2. Tầng Máy Chủ (Next.js Node.js Runtime)"]
+        API["Next.js REST API Routes (/api/*)"]
+        Auth["Cookie Session + Bcrypt.js + RBAC"]
+        Bot["CareBot NLP Engine (/api/ai-chat)"]
+    end
+
+    subgraph Data ["3. Tầng Dữ Liệu (Persistence Layer)"]
+        ORM["Prisma ORM v5.18 (Type-safe Singleton)"]
+        DB[("SQLite 3 Database (prisma/dev.db)")]
+    end
+
+    UI --> Form
+    UI --> Style
+    Form -- "HTTP Fetch (JSON)" --> API
+    UI -- "HTTP Fetch (JSON)" --> Bot
+    API --> Auth
+    API --> ORM
+    Bot --> ORM
+    ORM -- "I/O Truy vấn tham số hóa" --> DB
+```
 
 ---
 
